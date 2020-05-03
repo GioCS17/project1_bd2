@@ -1,9 +1,10 @@
-
+#pragma once
 #include<fstream>
 #include<iostream>
 #include<string>
 
 namespace bd2{
+
 class controldisk : protected std::fstream{
 
   std::string filePath;
@@ -12,12 +13,12 @@ class controldisk : protected std::fstream{
 
   public:
 
-  controldisk(std::string fp,bool reset); : filePath(fp), std::fstrema(fp.data(), std::ios::in | std::ios::out | std::ios::binary){
+  controldisk(std::string fp,bool reset) : filePath(fp), std::fstream(fp.data(), std::ios::in | std::ios::out | std::ios::binary){
     reset=false;
 
     if(!good() || reset){ //good check if any flag bit without googbit is on
       empty=true;
-      open(fp.data(),std::fstrema(fp.data(), std::ios::in | std::ios::out | std::ios::binary){
+      open(fp.data(),std::ios::in | std::ios::out | std::ios::binary);
 
     }
   }
@@ -25,15 +26,15 @@ class controldisk : protected std::fstream{
 
 
   template<typename Record>
-  void write(const long &n, Record& reg){
+  void write_record(const long &n, Record& reg){
     clear(); //reset flags bit (goodbit, eofbit, failbit, badbit)
     seekp(n*sizeof(Record),std::ios::beg);
-    write(reinterpret_cast<const char*>(*reg),sizeof(reg));
+    write(reinterpret_cast<const char*>(&reg),sizeof(reg));
 
   }
 
   template<typename Record>
-  bool retrieve(const long &n, Record& reg){
+  bool retrieve_record(const long &n, Record& reg){
     clear();
     seekg(n*sizeof(Record),std::ios::beg);
     read(reinterpret_cast<char *>(&reg),sizeof(reg));
@@ -42,4 +43,5 @@ class controldisk : protected std::fstream{
 
 
 };
+
 }
