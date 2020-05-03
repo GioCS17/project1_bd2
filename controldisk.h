@@ -41,6 +41,8 @@ class controldisk : protected std::fstream{
     return gcount()>0; //Returns the number of characters extracted by the last unformatted input operation performed on the fstrem .
   }
 
+  inline bool is_empty(){ return empty;}
+
 
 };
 
