@@ -9,22 +9,24 @@ template<typename T, int ORDER = 3>
 class bplustree{
 
   using type_pk = typename T::type_pk;
+  using type_id = long;
 
   struct Node{
-    long id;
+    type_id id;
     long size;
 
-    long left_node;
-    long right_node;
+    type_id left_node;
+    type_id right_node;
 
     bool is_leaf;
 
-    long values[ORDER];
-    long* children[ORDER+1];
+    type_id values[ORDER];
+    Node* children[ORDER+1];
 
-    Node(const long _id) : id(_id){
+    Node(const type_id _id) : id{_id}{
       size=0;
       is_leaf=true;
+      left_node=right_node=-1;
     }
   };
 
@@ -32,8 +34,10 @@ class bplustree{
 
   std::shared_ptr<controldisk> ctrl_disk;
 
+  Node* root;
+
   public:
-    bplustree(){
+    bplustree(std::shared_ptr<controldisk> cdisk):ctrl_disk{cdisk}{
     }
     ~bplustree(){
     }
