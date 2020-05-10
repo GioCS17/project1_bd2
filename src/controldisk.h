@@ -5,24 +5,23 @@
 
 namespace bd2{
 
-class controldisk : protected std::fstream{
+class ControlDisk : protected std::fstream{
 
   std::string filePath;
   bool empty;
 
-
   public:
 
-  controldisk(std::string fp,bool reset) : filePath(fp), std::fstream(fp.data(), std::ios::in | std::ios::out | std::ios::binary){
-    reset=false;
-
+  ControlDisk(std::string fp,bool reset) : filePath(fp), std::fstream(fp.data(), std::ios::in | std::ios::out | std::ios::binary){
+    empty=false;
     if(!good() || reset){ //good check if any flag bit without googbit is on
       empty=true;
       open(fp.data(),std::ios::in | std::ios::out | std::ios::binary);
 
     }
   }
-  ~controldisk(){ close();}
+
+  ~ControlDisk(){ close();} //close de open file
 
 
   template<typename Record>
