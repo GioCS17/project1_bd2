@@ -34,10 +34,11 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
   std::string values = "zxcnmvfjdaqpirue";
   for(auto c : values) {
     bt.insert(c);
+    bt.showTree();
   }
   bt.showTree();
   std::ostringstream out;
-  //bt.print(out);
+  bt.print(out);
   std::sort(values.begin(), values.end());
   EXPECT_EQ(out.str(), values.c_str());
 }

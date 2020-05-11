@@ -4,18 +4,14 @@
 #include <vector>
 
 namespace bd2{
-    
 template <class T, int ORDER>
 class BPlusTree;
 
-template <class T, int ORDER>
-class BPlusTreeIterator;
-    
 template<typename T, int ORDER>
 class Node{
 
-  T keys [ORDER - 1];
-  long children [ORDER];
+  T keys [ORDER + 1];
+  long children [ORDER + 2];
   
   long n_keys = 0;
   bool is_leaf = false;
@@ -25,15 +21,19 @@ class Node{
   long page_id = -1; //page id on disk
   
   public:
+
+    void initChildrensWithZeros(){
+        for (int i = 0; i < ORDER + 2; i++)
+            children[i] = 0;
+    }
     /**
      * @brief Construct a new Node object
       * 
      * @param p_id page id of the node on disk
      */
-    Node(long p_id): page_id (p_id) {
-      //Initialize all children pointers to -1
-      for (int i = 0; i < ORDER; i++)
-        children[i] = -1;
+    Node(long p_id){
+        this->page_id = p_id;
+        this->initChildrensWithZeros();
     };
 
     /**
@@ -42,10 +42,10 @@ class Node{
      * @param p_id 
      * @param is_leaf 
      */
-    Node(long p_id, bool is_leaf): page_id (p_id), is_leaf(is_leaf){
-      //Initialize all children pointers to -1
-      for (int i = 0; i < ORDER; i++)
-        children[i] = -1;
+    Node(long p_id, bool is_leaf){
+        this->page_id = p_id;
+        this->is_leaf = is_leaf;
+        this->initChildrensWithZeros();
     };
 
     /**
@@ -54,13 +54,13 @@ class Node{
      * @param key_value 
      * @param pos 
      */
-    void insertKeyInPosition(T key_value, int pos){
+    void insertKeyInPosition(int pos, const T &key){
       //Move to the right until we find the pos of the key value
       for(int i = n_keys; i > pos; i--){
         keys[i] = keys[i - 1];
         children[i + 1] = children[i];
       }
-      keys[pos] = key_value;
+      keys[pos] = key;
       children[pos + 1] = children [pos];
       n_keys += 1;
     };
@@ -93,237 +93,166 @@ class Node{
 
 template<typename T, int ORDER = 3>
 class BPlusTree{
-  using type_id = long;
+
   using node = bd2::Node<T,ORDER>;
   using page = std::shared_ptr<ControlDisk>;
-  using iterator = bd2::BPlusTreeIterator<T, ORDER>;
   enum state { OVERFLOW, UNDERFLOW, NORMAL};
 
-  page ctrl_disk;
-  node* root;
+  page control_disk; // control disk of the index file
 
-
-  struct Root{
+  struct Header{
       long root_page_id = 1;
       long n_nodes = 0;
   } header;
-
   public:
 
-    BPlusTree(page c_disk):ctrl_disk{c_disk}{
-        if (!ctrl_disk->is_empty()){
-            ctrl_disk->retrieve_record(header.root_page_id, header);
-        }else{  //Init the control disk
-            node root (header.root_page_id, true);
-            ctrl_disk->write_record(root.page_id, root);
+    BPlusTree(page c_disk){
+        this->control_disk = c_disk;
+        if (!control_disk->is_empty())
+            control_disk->retrieve_record(0, header);
+        else{  //Init the control disk
+            node root (header.root_page_id);
+            control_disk->write_record(root.page_id, root);
             header.n_nodes++;
-            ctrl_disk->write_record(0, header);
+            control_disk->write_record(0, header);
         }
     }
 
     node createNode(){
         header.n_nodes++;
-        node n(header.n_nodes); //tamaño
-        ctrl_disk->write_record(0, header);
-        return n;
+        control_disk->write_record(0, header);
+        node new_node(header.n_nodes); //tamaño
+        return new_node;
     }
 
     node readNode(long p_id){
-        node n(-1);
-        ctrl_disk->retrieve_record(p_id, n);
-        return n;
+        node new_node(-1);
+        control_disk->retrieve_record(p_id, new_node);
+        return new_node;
     }
 
     void writeNode(long p_id, node n){
-        ctrl_disk->write_record(p_id, n);
+        control_disk->write_record(p_id, n);
     }
 
-    void insert(T &value){
+    void insert(const T &value){
         node root = this->readNode(header.root_page_id);
         int state = this->insert(root, value);
         if (state == OVERFLOW) {
             this->splitRoot();
         }
     }
-    
-    int insert(node &ptr, T value){
+
+    int insert(node &ptr, const T &value){
         int pos = 0;
         // Equivalente a un for para encontrar la posición del valor dentro de el root
         while (pos < ptr.n_keys && ptr.keys[pos] < value)
             pos++;
 
-        if (ptr.is_leaf){
-            ptr.insertKeyInPosition(pos, value);
-            this->writeNode(ptr.page_id, ptr);
-        } else {
+        if (ptr.children[pos] != 0){
             //ya encontre el page_id del root, lo busco en sus hijos
             long page_id = ptr.children[pos];
             node child = readNode(page_id); //leo el hijo
             int state = insert(child, value);
             if (state == OVERFLOW){
-                if (child.is_leaf){
-                    this->splitLeaf(ptr, pos);
-                }else{
-                    this->splitNode(ptr, pos);
-                }
+                splitNode(ptr, pos);
             }
+        } else {
+            ptr.insertKeyInPosition(pos, value);
+            writeNode(ptr.page_id, ptr);
         }
         return ptr.isOverflow() ? OVERFLOW : NORMAL;
     }
 
+
     void splitRoot() {
-        node ptr = this->readNode(this->header.root_page_id);
-        node left = this->createNode();
-        node right = this->createNode();
+        node ptr = readNode(header.root_page_id);
+        node left = createNode();
+        node right = createNode();
 
-        int i = 0;
-        int iter = 0;
+        int i; //for child
+        int iter = 0;//for keys
+        int pos = 0;
 
-        int mid = ptr.n_keys/2;
-        int mid_key = ptr.keys[mid];
-
-        if (ptr.is_leaf) {
-            ptr.is_leaf = false;
-            left.is_leaf = true;
-            right.is_leaf = true;
-
-            for (i = 0; iter < mid; i++) {
-                left.keys[i] = ptr.keys[iter];
-                left.children[i] = ptr.children[iter];
-                left.n_keys++;
-
-                ptr.keys[iter] = ptr.children[iter] = 0;
-                iter++;
-            }
-
-            for (i = 0; iter < ORDER + 1; i++) {
-                right.keys[i] = ptr.keys[iter];
-                right.children[i] = ptr.children[iter];
-                right.n_keys++;
-
-                ptr.keys[iter] = ptr.children[iter] = 0;
-                iter++;
-            }
-
-            left.next = right.page_id;
-        } else {
-            for (i = 0; iter < mid; i++) {
-                left.keys[i] = ptr.keys[iter];
-                left.children[i] = ptr.children[iter];
-                left.n_keys++;
-
-                ptr.keys[iter] = ptr.children[iter] = 0;
-                iter++;
-            }
+        for (i = 0; iter < ORDER / 2; i++) {
             left.children[i] = ptr.children[iter];
-            ptr.children[iter] = 0;
+            left.keys[i] = ptr.keys[iter];
+            left.n_keys++;
             iter++;
-
-            for (i = 0; iter < ORDER + 1; i++) {
-                right.keys[i] = ptr.keys[iter];
-                right.children[i] = ptr.children[iter];
-                right.n_keys++;
-
-                ptr.keys[iter] = ptr.children[iter] = 0;
-                iter++;
-            }
-            right.children[i] = ptr.children[iter];
-            ptr.children[iter] = 0;
         }
+        left.children[i] = ptr.children[iter];
 
-        ptr.children[0] = left.page_id;
-        ptr.children[1] = right.page_id;
-        ptr.keys[0] = mid_key;
+        left.keys[i] = ptr.keys[iter]; // left based split
+        left.n_keys++;
+
+        iter++; // the middle element
+        for (i = 0; iter < ORDER + 1; i++) {
+            right.children[i] = ptr.children[iter];
+            right.keys[i] = ptr.keys[iter];
+            right.n_keys++;
+            iter++;
+        }
+        right.children[i] = ptr.children[iter];
+
+        ptr.children[pos] = left.page_id; //first child link to the left node
+        ptr.keys[0] = ptr.keys[ORDER / 2];
+        ptr.children[pos + 1] = right.page_id;
         ptr.n_keys = 1;
 
-        this->writeNode(ptr.page_id, ptr);
-        this->writeNode(left.page_id, left);
-        this->writeNode(right.page_id, right);
+        writeNode(ptr.page_id, ptr);
+        writeNode(left.page_id, left);
+        writeNode(right.page_id, right);
     }
 
     void splitNode(node &parent, int pos) {
-        node left = this->readNode(parent.children[pos]);
-        node right = this->createNode();
+        node ptr = readNode(parent.children[pos]);
+        node left = createNode();
+        node right = createNode();
 
-        int iter = ORDER / 2 + 1;
-        int middle = ORDER / 2;
+        int iter = 0;
         int i;
 
-        left.keys[middle] = 0;
-        for (i = 0; iter < ORDER + 1; i++) {
-            right.children[i] = left.children[iter];
-            right.keys[i] = left.keys[iter];
-            right.n_keys++;
-
-            left.keys[iter] = 0;
-            left.children[iter] = 0;
+        for (i = 0; iter < ORDER / 2; i++) {
+            left.children[i] = ptr.children[iter];
+            left.keys[i] = ptr.keys[iter];
+            left.n_keys++;
             iter++;
         }
-        right.children[i] = left.children[iter];
-        left.children[iter] = 0;
-        left.n_keys = middle; //actualizo left
+        left.children[i] = ptr.children[iter];
 
-        parent.insertKeyInPosition(pos, left.keys[middle]);
+        left.keys[i] = ptr.keys[iter]; //left based
+        left.n_keys++;
+
+
+        parent.insertKeyInPosition(pos, ptr.keys[iter]);
+
+        iter++; // the middle element
+
+        for (i = 0; iter < ORDER + 1; i++) {
+            right.children[i] = ptr.children[iter];
+            right.keys[i] = ptr.keys[iter];
+            right.n_keys++;
+
+            iter++;
+        }
+        right.children[i] = ptr.children[iter];
+
         parent.children[pos] = left.page_id;
-        parent.children[pos+1] = right.page_id;
+        parent.children[pos + 1] = right.page_id;
 
-        this->writeNode(parent.page_id, parent);
-        this->writeNode(left.page_id, left);
-        this->writeNode(right.page_id, right);
+        writeNode(parent.page_id, parent);
+        writeNode(left.page_id, left);
+        writeNode(right.page_id, right);
     }
 
     void splitLeaf (node &parent, int pos){
-        node left = readNode(parent.children[pos]);
-        node right = createNode();
-        right.is_leaf = true;
-
-        int iter = ORDER/2 + 1;
-        int i;
-
-        for (i = 0; iter < ORDER + 1; i++) {
-            right.children[i] = left.children[iter];
-            right.keys[i] = left.keys[iter];
-            right.n_keys++;
-            left.children[iter] = left.keys[iter] = 0;
-            //limpiando
-            iter++;
-        }
-        left.n_keys = ORDER / 2;
-        right.next = left.next;
-        left.next = right.page_id;
-
-        parent.insertKeyInPosition(pos, left.keys[ORDER / 2]);
-        parent.children[pos] = left.page_id;
-        parent.children[pos+1] = right.page_id;
-
-        this->writeNode(parent.page_id, parent);
-        this->writeNode(left.page_id, left);
-        this->writeNode(right.page_id, right);
     }
-
-    iterator find(const T &value) {
-        node ptr = this->readNode(header.root_page_id);
-        int pos;
-        while (!ptr.is_leaf){
-            pos = 0;
-            while (pos < ptr.n_keys && ptr.keys[pos] < value){
-                pos++;
-            }
-            ptr = this->readNode(ptr.children[pos]);
-        }
-        iterator result (this->pm, ptr.page_id);
-
-        return result;
-    }
-    
 
     void showTree() {
         node root = readNode(header.root_page_id);
         showTree(root, 0);
         std::cout << "________________________\n";
     }
-
-
 
     void showTree(node &ptr, int level) {
         int i;
@@ -344,19 +273,24 @@ class BPlusTree{
         }
     }
 
-    iterator begin(){
-        node current = this->readNode(header.root_page_id);
-        while (!current.is_leaf) {
-            current = this->readNode(current.children[0]);
-        }
-        iterator result (this->pm, current.page_id);
-        return result;
-
+    void print(std::ostream& out) {
+        node root = readNode(header.root_page_id);
+        print(root, 0, out);
     }
 
-    iterator end(){
-        iterator result (this->pm, -1);
-        return result;
+    void print(node &ptr, int level, std::ostream& out) {
+        int i;
+        for (i = 0; i < ptr.n_keys; i++) {
+            if (ptr.children[i]) {
+                node child = readNode(ptr.children[i]);
+                print(child, level + 1, out);
+            }
+            out << ptr.keys[i];
+        }
+        if (ptr.children[i]) {
+            node child = readNode(ptr.children[i]);
+            print(child, level + 1, out);
+        }
     }
 
 
@@ -364,75 +298,5 @@ class BPlusTree{
     }
   
 };
-
-    template <class T, int ORDER = 3>
-    class btreeIter{
-    private:
-        int pos;
-        long node_id;
-        using page = std::shared_ptr<ControlDisk>;
-        page pm_it;
-    public:
-        friend class BPlusTree<T, ORDER>;
-        using node = bd2::Node<T, ORDER>;
-
-        btreeIter(page &pm, long node_id){
-            this->pm_it = pm;
-            this->node_id = node_id;
-            this->pos = 0;
-        }
-        btreeIter(page &pm, long node_id, int pos){
-            this->pm_it = pm;
-            this->node_id = node_id;
-            this->pos = pos;
-        }
-        btreeIter(page &pm, const btreeIter& other){
-            this->pm_it = other.pm_it;
-            this->node_id = other.node_id;
-            this->pos = other.pos;
-        }
-
-        node readNode (long page_id){
-            node nd (-1);
-            (page_id == -1)? nd.next = -1: pm_it->retrieve_record(page_id, nd);
-            return nd;
-        }
-
-        btreeIter& operator=(btreeIter other){
-            this->pos = other.pos;
-            this->node_id = other.node_id;
-            return *this;
-        }
-        bool operator==(const btreeIter& other) {
-            return (this->node_id == other.node_id) && (this->pos == other.pos);
-        }
-        bool operator!=(const btreeIter& other) {
-            return !((*this) == other);
-        }
-
-
-        btreeIter& operator++(){ // postfix ++
-            node temp = readNode(this->node_id);
-            this->pos++;
-            if (temp.n_keys <= this->pos){
-                this->node_id = temp.next;
-                this->pos = 0;
-            }
-            return *this;
-        }
-
-        btreeIter& operator++(int){ // prefix ++
-            btreeIter result (pm_it, *this);
-            ++(*this);
-            return result;
-        }
-
-        // dereference operator
-        T operator*() {
-            node temp = readNode(this->node_id);
-            return temp.keys[pos];
-        }
-
-    };
 
 }
