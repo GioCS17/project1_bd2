@@ -32,9 +32,14 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
   std::cout << "BTREE_ORDER: " << BTREE_ORDER << std::endl;
   bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
   std::string values = "zxcnmvfjdaqpirue";
+  int i=1;
   for(auto c : values) {
+      if (c == 'd'){
+          std::cout << "iter: " << i << std::endl;
+      }
     bt.insert(c);
     bt.showTree();
+    i++;
   }
   bt.showTree();
   std::ostringstream out;

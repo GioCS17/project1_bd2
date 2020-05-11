@@ -26,6 +26,8 @@ class Node{
         for (int i = 0; i < ORDER + 2; i++)
             children[i] = 0;
     }
+
+    Node();
     /**
      * @brief Construct a new Node object
       * 
@@ -42,9 +44,9 @@ class Node{
      * @param p_id 
      * @param is_leaf 
      */
-    Node(long p_id, bool is_leaf){
+    Node(long p_id, bool is_leaf_flag){
         this->page_id = p_id;
-        this->is_leaf = is_leaf;
+        this->is_leaf = is_leaf_flag;
         this->initChildrensWithZeros();
     };
 
@@ -111,17 +113,17 @@ class BPlusTree{
         if (!control_disk->is_empty())
             control_disk->retrieve_record(0, header);
         else{  //Init the control disk
-            node root (header.root_page_id);
+            node root (header.root_page_id, true);
             control_disk->write_record(root.page_id, root);
             header.n_nodes++;
             control_disk->write_record(0, header);
         }
     }
 
-    node createNode(){
+    node createNode(bool isLeaf){
         header.n_nodes++;
         control_disk->write_record(0, header);
-        node new_node(header.n_nodes); //tamaño
+        node new_node(header.n_nodes, isLeaf); //tamaño
         return new_node;
     }
 
@@ -149,13 +151,13 @@ class BPlusTree{
         while (pos < ptr.n_keys && ptr.keys[pos] < value)
             pos++;
 
-        if (ptr.children[pos] != 0){
+        if (!ptr.is_leaf){
             //ya encontre el page_id del root, lo busco en sus hijos
             long page_id = ptr.children[pos];
             node child = readNode(page_id); //leo el hijo
             int state = insert(child, value);
             if (state == OVERFLOW){
-                splitNode(ptr, pos);
+                splitLeaf(ptr, pos);
             }
         } else {
             ptr.insertKeyInPosition(pos, value);
@@ -167,8 +169,15 @@ class BPlusTree{
 
     void splitRoot() {
         node ptr = readNode(header.root_page_id);
-        node left = createNode();
-        node right = createNode();
+        node left;
+        node right;
+        if (header.n_nodes > 4){ //verificar condicion
+            left = createNode(false);
+            right = createNode(false);
+        }else{
+            left = createNode(true);
+            right = createNode(true);
+        }
 
         int i; //for child
         int iter = 0;//for keys
@@ -182,9 +191,10 @@ class BPlusTree{
         }
         left.children[i] = ptr.children[iter];
 
+        /*
         left.keys[i] = ptr.keys[iter]; // left based split
         left.n_keys++;
-
+        */
         iter++; // the middle element
         for (i = 0; iter < ORDER + 1; i++) {
             right.children[i] = ptr.children[iter];
@@ -198,6 +208,7 @@ class BPlusTree{
         ptr.keys[0] = ptr.keys[ORDER / 2];
         ptr.children[pos + 1] = right.page_id;
         ptr.n_keys = 1;
+        ptr.is_leaf = false;
 
         writeNode(ptr.page_id, ptr);
         writeNode(left.page_id, left);
@@ -206,8 +217,8 @@ class BPlusTree{
 
     void splitNode(node &parent, int pos) {
         node ptr = readNode(parent.children[pos]);
-        node left = createNode();
-        node right = createNode();
+        node left = createNode(false);
+        node right = createNode(false);
 
         int iter = 0;
         int i;
@@ -220,11 +231,12 @@ class BPlusTree{
         }
         left.children[i] = ptr.children[iter];
 
-        left.keys[i] = ptr.keys[iter]; //left based
+        /*
+        left.keys[i] = ptr.keys[iter]; //left based split
         left.n_keys++;
+        */
 
-
-        parent.insertKeyInPosition(pos, ptr.keys[iter]);
+        parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promovida
 
         iter++; // the middle element
 
@@ -239,6 +251,7 @@ class BPlusTree{
 
         parent.children[pos] = left.page_id;
         parent.children[pos + 1] = right.page_id;
+        parent.is_leaf = false;
 
         writeNode(parent.page_id, parent);
         writeNode(left.page_id, left);
@@ -246,6 +259,46 @@ class BPlusTree{
     }
 
     void splitLeaf (node &parent, int pos){
+        node ptr = readNode(parent.children[pos]);
+        node left = createNode(true);
+        node right = createNode(true);
+
+        int iter = 0;
+        int i;
+
+        for (i = 0; iter < ORDER / 2; i++) {
+            left.children[i] = ptr.children[iter];
+            left.keys[i] = ptr.keys[iter];
+            left.n_keys++;
+            iter++;
+        }
+        left.children[i] = ptr.children[iter];
+
+        /*
+        left.keys[i] = ptr.keys[iter]; //left based split
+        left.n_keys++;
+        */
+
+        parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promovida
+
+        iter++; // the middle element
+
+        for (i = 0; iter < ORDER + 1; i++) {
+            right.children[i] = ptr.children[iter];
+            right.keys[i] = ptr.keys[iter];
+            right.n_keys++;
+
+            iter++;
+        }
+        right.children[i] = ptr.children[iter];
+
+        parent.children[pos] = left.page_id;
+        parent.children[pos + 1] = right.page_id;
+        parent.is_leaf = false;
+
+        writeNode(parent.page_id, parent);
+        writeNode(left.page_id, left);
+        writeNode(right.page_id, right);
     }
 
     void showTree() {
@@ -257,7 +310,7 @@ class BPlusTree{
     void showTree(node &ptr, int level) {
         int i;
         for (i = ptr.n_keys - 1; i >= 0; i--) {
-            if (!ptr.is_leaf && ptr.children[i + 1]) {
+            if (ptr.children[i + 1]) {
                 node child = readNode(ptr.children[i + 1]);
                 showTree(child, level + 1);
             }
@@ -267,7 +320,7 @@ class BPlusTree{
             }
             std::cout << ptr.keys[i] << "\n";
         }
-        if (!ptr.is_leaf && ptr.children[i + 1]) {
+        if (ptr.children[i + 1]) {
             node child = readNode(ptr.children[i + 1]);
             showTree(child, level + 1);
         }
