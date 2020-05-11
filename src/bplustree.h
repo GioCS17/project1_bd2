@@ -169,14 +169,11 @@ class BPlusTree{
 
     void splitRoot() {
         node ptr = readNode(header.root_page_id);
-        node left;
-        node right;
+        node left = createNode(true);
+        node right = createNode(true);
         if (header.n_nodes > 4){ //verificar condicion
             left = createNode(false);
             right = createNode(false);
-        }else{
-            left = createNode(true);
-            right = createNode(true);
         }
 
         int i; //for child
