@@ -222,53 +222,10 @@ class BPlusTree{
         writeNode(right.page_id, right);
     }
 
-    void splitNode(node &parent, int pos) {
-        node ptr = readNode(parent.children[pos]);
-        node left = createNode(false);
-        node right = createNode(false);
-
-        int iter = 0;
-        int i;
-
-        for (i = 0; iter < ORDER / 2; i++) {
-            left.children[i] = ptr.children[iter];
-            left.keys[i] = ptr.keys[iter];
-            left.n_keys++;
-            iter++;
-        }
-        left.children[i] = ptr.children[iter];
-
-
-        left.keys[i] = ptr.keys[iter]; //left based split
-        left.n_keys++;
-
-
-        parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promovida
-
-        iter++; // the middle element
-
-        for (i = 0; iter < ORDER + 1; i++) {
-            right.children[i] = ptr.children[iter];
-            right.keys[i] = ptr.keys[iter];
-            right.n_keys++;
-
-            iter++;
-        }
-        right.children[i] = ptr.children[iter];
-
-        parent.children[pos] = left.page_id;
-        parent.children[pos + 1] = right.page_id;
-        parent.is_leaf = false;
-
-        writeNode(parent.page_id, parent);
-        writeNode(left.page_id, left);
-        writeNode(right.page_id, right);
-    }
-
     void splitLeaf (node &parent, int pos){
         node ptr = readNode(parent.children[pos]);
-        node left = createNode(parent.children[pos], true);
-        node right = createNode(true);
+        node left = createNode(parent.children[pos], ptr.is_leaf);
+        node right = createNode(ptr.is_leaf);
 
         int iter = 0;
         int i;
@@ -283,6 +240,9 @@ class BPlusTree{
         if (ptr.is_leaf) {
             left.keys[i] = ptr.keys[iter]; //left based split
             left.n_keys++;
+        }else{
+            //left.is_leaf = false;
+            //right.is_leaf = false;
         }
         parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promoted
 
@@ -315,7 +275,7 @@ class BPlusTree{
     void showTree(node &ptr, int level) {
         int i;
         for (i = ptr.n_keys - 1; i >= 0; i--) {
-            if (ptr.children[i + 1]) {
+            if (ptr.children[i + 1]) { //right child
                 node child = readNode(ptr.children[i + 1]);
                 showTree(child, level + 1);
             }
@@ -325,7 +285,7 @@ class BPlusTree{
             }
             std::cout << ptr.keys[i] << "\n";
         }
-        if (ptr.children[i + 1]) {
+        if (ptr.children[i + 1]) {//left child
             node child = readNode(ptr.children[i + 1]);
             showTree(child, level + 1);
         }
