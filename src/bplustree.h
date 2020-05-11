@@ -2,6 +2,7 @@
 #include <memory>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 namespace bd2{
 template <class T, int ORDER>
@@ -67,6 +68,10 @@ class Node{
       n_keys += 1;
     };
 
+    void updateKeyInposition(int pos, const T &key){
+        keys[pos] = key;
+    }
+
     /**
      * @brief Check is the node is in overflow
      * 
@@ -127,6 +132,11 @@ class BPlusTree{
         return new_node;
     }
 
+    node createNode(long p_id, bool isLeaf){
+        node new_node(p_id, isLeaf); //tamaño
+        return new_node;
+    }
+
     node readNode(long p_id){
         node new_node(-1);
         control_disk->retrieve_record(p_id, new_node);
@@ -151,17 +161,19 @@ class BPlusTree{
         while (pos < ptr.n_keys && ptr.keys[pos] < value)
             pos++;
 
-        if (!ptr.is_leaf){
+        if (ptr.is_leaf){
+            ptr.insertKeyInPosition(pos, value);
+            writeNode(ptr.page_id, ptr);
+        } else {
             //ya encontre el page_id del root, lo busco en sus hijos
             long page_id = ptr.children[pos];
             node child = readNode(page_id); //leo el hijo
             int state = insert(child, value);
             if (state == OVERFLOW){
-                splitLeaf(ptr, pos);
+
+                splitLeaf(ptr, pos); //update index
+
             }
-        } else {
-            ptr.insertKeyInPosition(pos, value);
-            writeNode(ptr.page_id, ptr);
         }
         return ptr.isOverflow() ? OVERFLOW : NORMAL;
     }
@@ -169,12 +181,8 @@ class BPlusTree{
 
     void splitRoot() {
         node ptr = readNode(header.root_page_id);
-        node left = createNode(true);
-        node right = createNode(true);
-        if (header.n_nodes > 4){ //verificar condicion
-            left = createNode(false);
-            right = createNode(false);
-        }
+        node left = createNode(ptr.is_leaf);
+        node right = createNode(ptr.is_leaf);
 
         int i; //for child
         int iter = 0;//for keys
@@ -188,10 +196,12 @@ class BPlusTree{
         }
         left.children[i] = ptr.children[iter];
 
-        /*
-        left.keys[i] = ptr.keys[iter]; // left based split
-        left.n_keys++;
-        */
+        if (ptr.is_leaf){
+            left.keys[i] = ptr.keys[iter]; // left based split (save in node)
+            left.n_keys++;
+        }
+
+
         iter++; // the middle element
         for (i = 0; iter < ORDER + 1; i++) {
             right.children[i] = ptr.children[iter];
@@ -228,10 +238,10 @@ class BPlusTree{
         }
         left.children[i] = ptr.children[iter];
 
-        /*
+
         left.keys[i] = ptr.keys[iter]; //left based split
         left.n_keys++;
-        */
+
 
         parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promovida
 
@@ -257,12 +267,11 @@ class BPlusTree{
 
     void splitLeaf (node &parent, int pos){
         node ptr = readNode(parent.children[pos]);
-        node left = createNode(true);
+        node left = createNode(parent.children[pos], true);
         node right = createNode(true);
 
         int iter = 0;
         int i;
-
         for (i = 0; iter < ORDER / 2; i++) {
             left.children[i] = ptr.children[iter];
             left.keys[i] = ptr.keys[iter];
@@ -271,12 +280,11 @@ class BPlusTree{
         }
         left.children[i] = ptr.children[iter];
 
-        /*
-        left.keys[i] = ptr.keys[iter]; //left based split
-        left.n_keys++;
-        */
-
-        parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promovida
+        if (ptr.is_leaf) {
+            left.keys[i] = ptr.keys[iter]; //left based split
+            left.n_keys++;
+        }
+        parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promoted
 
         iter++; // the middle element
 
@@ -335,7 +343,8 @@ class BPlusTree{
                 node child = readNode(ptr.children[i]);
                 print(child, level + 1, out);
             }
-            out << ptr.keys[i];
+            if (ptr.is_leaf)
+                out << ptr.keys[i];
         }
         if (ptr.children[i]) {
             node child = readNode(ptr.children[i]);
