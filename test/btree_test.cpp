@@ -1,8 +1,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <bplustree.h>
-#include <controldisk.h>
+#include <b_plus_tree.h>
+#include <disk_manager.h>
 
 #include <fmt/core.h>
 
@@ -28,7 +28,7 @@ struct DiskBasedBtree : public ::testing::Test
 
 TEST_F(DiskBasedBtree, IndexingRandomElements) {
   bool trunc_file = true;
-  std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index", trunc_file);
+  std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btree.index", trunc_file);
   std::cout << "PAGE_SIZE: " << PAGE_SIZE << std::endl;
   std::cout << "BTREE_ORDER: " << BTREE_ORDER << std::endl;
   bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
@@ -46,7 +46,7 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
 }
 
 TEST_F(DiskBasedBtree, Persistence) {
-    std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
+    std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btree.index");
     bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
     std::string values = "be1986432";
     for(auto c : values) {
@@ -61,7 +61,7 @@ TEST_F(DiskBasedBtree, Persistence) {
 }
 
 TEST_F(DiskBasedBtree, IteratorFrom) {
-  std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
+  std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btree.index");
   using char_btree = bd2::BPlusTree<char, BTREE_ORDER>;
   using char_btree_iterator = bd2::BPlusTreeIterator<char, BTREE_ORDER>;
   char_btree bt(pm);
@@ -78,7 +78,7 @@ TEST_F(DiskBasedBtree, IteratorFrom) {
 }
 
 TEST_F(DiskBasedBtree, IteratorBack) {
-    std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
+    std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btree.index");
     using char_btree = bd2::BPlusTree<char, BTREE_ORDER>;
     using char_btree_iterator = bd2::BPlusTreeIterator<char, BTREE_ORDER>;
     char_btree bt(pm);
