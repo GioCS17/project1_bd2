@@ -25,18 +25,18 @@ struct DiskBasedBtree : public ::testing::Test
 {
 };
 
+
 TEST_F(DiskBasedBtree, IndexingRandomElements) {
   bool trunc_file = true;
   std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index", trunc_file);
   std::cout << "PAGE_SIZE: " << PAGE_SIZE << std::endl;
   std::cout << "BTREE_ORDER: " << BTREE_ORDER << std::endl;
   bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
+
   std::string values = "zxcnmvfjda";
-  int i=1;
   for(auto c : values) {
     bt.insert(c);
     bt.showTree();
-    i++;
   }
   bt.showTree();
   std::ostringstream out;
@@ -45,47 +45,52 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
   EXPECT_EQ(out.str(), values.c_str());
 }
 
-
 TEST_F(DiskBasedBtree, Persistence) {
-  std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
-  bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
-  std::string values = "123456";
-  for(auto c : values) {
-    bt.insert(c);
-    bt.showTree();
-  }
-
-
-  std::ostringstream out;
-  bt.print(out);
-  std::string all_values = "zxcnmvfjda123456";
-  std::sort(all_values.begin(), all_values.end());
-  EXPECT_EQ(out.str(), all_values.c_str());
+    std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
+    bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
+    std::string values = "be1986432";
+    for(auto c : values) {
+        bt.insert(c);
+        bt.showTree();
+    }
+    std::ostringstream out;
+    bt.print(out);
+    std::string all_values = "zxcnmvfjdabe1986432";
+    std::sort(all_values.begin(), all_values.end());
+    EXPECT_EQ(out.str(), all_values.c_str());
 }
 
-
-TEST_F(DiskBasedBtree, Iterators) {
+TEST_F(DiskBasedBtree, IteratorFrom) {
   std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
   using char_btree = bd2::BPlusTree<char, BTREE_ORDER>;
   using char_btree_iterator = bd2::BPlusTreeIterator<char, BTREE_ORDER>;
   char_btree bt(pm);
   char_btree_iterator iter = bt.begin();
   std:: string iter_values;
-  for( ; iter != bt.end(); iter++) {
+  for(; iter != bt.null(); iter++) {
       iter_values.push_back(*iter);
       std::cout << *iter << ", ";
   }
-    std::string all_values = "zxcnmvfjda123456";
-    std::sort(all_values.begin(), all_values.end());
+  std::cout << std::endl;
+  std::string all_values = "zxcnmvfjdabe1986432";
+  std::sort(all_values.begin(), all_values.end());
   EXPECT_EQ(all_values, iter_values);
+}
 
-    for(iter=bt.last() ; iter != bt.end(); iter--) {
+TEST_F(DiskBasedBtree, IteratorBack) {
+    std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
+    using char_btree = bd2::BPlusTree<char, BTREE_ORDER>;
+    using char_btree_iterator = bd2::BPlusTreeIterator<char, BTREE_ORDER>;
+    char_btree bt(pm);
+    char_btree_iterator iter = bt.end();
+    std:: string iter_values;
+    for(; iter != bt.null(); iter--) {
         iter_values.push_back(*iter);
         std::cout << *iter << ", ";
     }
-    std::sort(all_values.end(), all_values.begin());
-  EXPECT_EQ(all_values, iter_values);
-
+    std::cout << std::endl;
+    std::string all_values = "zxcnmvfjdabe1986432";
+    std::sort(all_values.begin(), all_values.end(), std::greater <>());
+    EXPECT_EQ(all_values, iter_values);
 }
-
 

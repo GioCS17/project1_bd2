@@ -323,16 +323,16 @@ class BPlusTree{
         iterator my_iter (control_disk, temp.page_id);
         return my_iter;
     }
-    iterator last(){
+    iterator end(){
         node temp = readNode(header.root_page_id);
         while (!temp.is_leaf){
             temp = readNode(temp.children[temp.n_keys]);
         }
-        iterator my_iter (control_disk, temp.page_id);
+        iterator my_iter (control_disk, temp.page_id, temp.n_keys-1);
         return my_iter;
     }
 
-    iterator end(){
+    iterator null(){
         iterator my_iter (control_disk, -1);
         return my_iter;
     }
@@ -397,10 +397,10 @@ public:
         keys_pos = 0;
     }
 
-    BPlusTreeIterator(page &cd, long npi, int keys_pos){
+    BPlusTreeIterator(page &cd, long npi, int _keys_pos){
         control_disk = cd;
         node_page_id = npi;
-        keys_pos = keys_pos;
+        keys_pos = _keys_pos;
     }
 
     BPlusTreeIterator(const BPlusTreeIterator & bpti){
@@ -427,10 +427,15 @@ public:
     BPlusTreeIterator& operator--(){
         keys_pos--;
         node temp = readNode(node_page_id);
-        node_page_id = temp.prev_node;
-        if (keys_pos <= 0){    //if we reach the end of the keys, go to the next node
+        if (keys_pos < 0){    //if we reach the end of the keys, go to the next node
             node_page_id = temp.prev_node;
-            keys_pos = temp.n_keys;
+            if (node_page_id != -1){
+                node prev = readNode(node_page_id);
+                keys_pos = prev.n_keys -1;
+            }else{
+                keys_pos = 0;
+            }
+
         }
         return *this;
     }
