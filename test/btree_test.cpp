@@ -31,7 +31,7 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
   std::cout << "PAGE_SIZE: " << PAGE_SIZE << std::endl;
   std::cout << "BTREE_ORDER: " << BTREE_ORDER << std::endl;
   bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
-  std::string values = "zxcnmvfjdaqpirue";
+  std::string values = "zxcnmvfjda";
   int i=1;
   for(auto c : values) {
     bt.insert(c);
@@ -58,7 +58,7 @@ TEST_F(DiskBasedBtree, Persistence) {
 
   std::ostringstream out;
   bt.print(out);
-  std::string all_values = "zxcnmvfjdaqpirue123456";
+  std::string all_values = "zxcnmvfjda123456";
   std::sort(all_values.begin(), all_values.end());
   EXPECT_EQ(out.str(), all_values.c_str());
 }
@@ -70,9 +70,22 @@ TEST_F(DiskBasedBtree, Iterators) {
   using char_btree_iterator = bd2::BPlusTreeIterator<char, BTREE_ORDER>;
   char_btree bt(pm);
   char_btree_iterator iter = bt.begin();
+  std:: string iter_values;
   for( ; iter != bt.end(); iter++) {
-    std::cout << *iter << ", ";
+      iter_values.push_back(*iter);
+      std::cout << *iter << ", ";
   }
+    std::string all_values = "zxcnmvfjda123456";
+    std::sort(all_values.begin(), all_values.end());
+  EXPECT_EQ(all_values, iter_values);
+
+    for(iter=bt.last() ; iter != bt.end(); iter--) {
+        iter_values.push_back(*iter);
+        std::cout << *iter << ", ";
+    }
+    std::sort(all_values.end(), all_values.begin());
+  EXPECT_EQ(all_values, iter_values);
+
 }
 
 

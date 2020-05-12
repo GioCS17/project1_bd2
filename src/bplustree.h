@@ -214,8 +214,6 @@ class BPlusTree{
         ptr.n_keys = 1;
         ptr.is_leaf = false;
 
-
-
         writeNode(ptr.page_id, ptr);
         writeNode(left.page_id, left);
         writeNode(right.page_id, right);
@@ -242,6 +240,9 @@ class BPlusTree{
             left.next_node = right.page_id;
             right.prev_node = left.page_id;
             right.next_node = parent.children[pos + 1];
+            node temp = readNode(right.next_node);
+            temp.prev_node = right.page_id;
+            writeNode(temp.page_id, temp);
         }
         parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promoted
 
@@ -322,6 +323,14 @@ class BPlusTree{
         iterator my_iter (control_disk, temp.page_id);
         return my_iter;
     }
+    iterator last(){
+        node temp = readNode(header.root_page_id);
+        while (!temp.is_leaf){
+            temp = readNode(temp.children[temp.n_keys]);
+        }
+        iterator my_iter (control_disk, temp.page_id);
+        return my_iter;
+    }
 
     iterator end(){
         iterator my_iter (control_disk, -1);
@@ -329,6 +338,36 @@ class BPlusTree{
     }
 
     ~BPlusTree(){
+    }
+
+    void search (const T &val) {
+        node root = readNode(header.root_page_id);
+        int res = search (root, val);
+        if (res == -1)
+            std::cout << "not found\n";
+        else
+            std::cout << "Yes!\n";
+
+    }
+
+    int search (node &ptr, const T &val){
+        int pos = 0;
+        while (pos < ptr.n_keys && ptr.keys[pos] < val)
+            pos++;
+
+        if (!ptr.is_leaf){
+            long page_id = ptr.children [pos];
+            node child = readNode (page_id);
+            return search (child, val);
+        } else {
+            if (ptr.keys [pos] != val){
+                return -1;
+            }else {
+                long page_record = ptr.children [pos];
+                return page_record;
+            }
+        }
+
     }
 
 };
