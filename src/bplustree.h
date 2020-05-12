@@ -344,9 +344,9 @@ class BPlusTree{
         node root = readNode(header.root_page_id);
         int res = search (root, val);
         if (res == -1)
-            std::cout << "not found\n";
+            std::cout << "Not found\n";
         else
-            std::cout << "Yes!\n";
+            std::cout << "Found!\n";
 
     }
 
@@ -368,6 +368,41 @@ class BPlusTree{
             }
         }
 
+    }
+
+    std::vector<long> range_search (const T &first, const T &end){
+        node root = readNode(header.root_page_id);
+        std::vector <long> res;
+        range_search (root, first, end, res);
+        return res;
+    }
+
+    void range_search (node &ptr, const T &first, const T &second, std::vector <long> &res){
+        int pos = 0;
+        while (pos < ptr.n_keys && ptr.keys[pos] < first)
+            pos++;
+
+        if (!ptr.is_leaf){
+            long page_id = ptr.children [pos];
+            node child = readNode (page_id);
+            range_search (child, first, second, res);
+        } else {
+            if (ptr.keys [pos] >= first){
+                std::cout << ptr.keys [pos] << " - ";
+                res.push_back (ptr.children [pos]);
+            }
+            pos++;
+            node temp = ptr;
+            while (temp.keys [pos] <= second && pos < temp.n_keys){
+                std::cout << temp.keys [pos] << " - ";
+                res.push_back (temp.children [pos]);
+                pos++;
+                if (pos == temp.n_keys ){
+                    temp = readNode (temp.next_node);
+                    pos = 0;
+                }
+            }
+        }
     }
 
 };
