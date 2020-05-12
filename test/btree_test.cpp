@@ -34,9 +34,6 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
   std::string values = "zxcnmvfjdaqpirue";
   int i=1;
   for(auto c : values) {
-      if (c == 'd'){
-          std::cout << "iter: " << i << std::endl;
-      }
     bt.insert(c);
     bt.showTree();
     i++;
@@ -48,15 +45,16 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
   EXPECT_EQ(out.str(), values.c_str());
 }
 
-/*
+
 TEST_F(DiskBasedBtree, Persistence) {
   std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
-  btree<char, BTREE_ORDER> bt(pm);
+  bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
   std::string values = "123456";
   for(auto c : values) {
     bt.insert(c);
+    bt.showTree();
   }
-  bt.print_tree();
+
 
   std::ostringstream out;
   bt.print(out);
@@ -68,13 +66,13 @@ TEST_F(DiskBasedBtree, Persistence) {
 
 TEST_F(DiskBasedBtree, Iterators) {
   std::shared_ptr<bd2::ControlDisk> pm = std::make_shared<bd2::ControlDisk>("btree.index");
-  using char_btree = btree<char, BTREE_ORDER>;
+  using char_btree = bd2::BPlusTree<char, BTREE_ORDER>;
+  using char_btree_iterator = bd2::BPlusTreeIterator<char, BTREE_ORDER>;
   char_btree bt(pm);
-// TODO:
-//  char_btree::iterator iter =  bt.find('a');
-//  for( ; iter != bt.end(); iter++) {
-//    std::cout << *iter << ", ";
-//  }
+  char_btree_iterator iter = bt.begin();
+  for( ; iter != bt.end(); iter++) {
+    std::cout << *iter << ", ";
+  }
 }
 
-*/
+

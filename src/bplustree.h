@@ -8,6 +8,9 @@ namespace bd2{
 template <class T, int ORDER>
 class BPlusTree;
 
+template <class T, int ORDER>
+class BPlusTreeIterator;
+
 template<typename T, int ORDER>
 class Node{
 
@@ -17,26 +20,27 @@ class Node{
   long n_keys = 0;
   bool is_leaf = false;
 
-  long next  = -1; //link to the next node if is a leaf
-  long prev = -1; //link to the previous node if is a leaf
+  long next_node  = -1; //link to the next node if is a leaf
+  long prev_node = -1; //link to the previous node if is a leaf
   long page_id = -1; //page id on disk
-  
+
+  void initChildrensWithZeros(){
+      for (int i = 0; i < ORDER + 2; i++)
+            children[i] = 0;
+  }
+
   public:
 
-    void initChildrensWithZeros(){
-        for (int i = 0; i < ORDER + 2; i++)
-            children[i] = 0;
-    }
 
-    Node();
+
     /**
      * @brief Construct a new Node object
       * 
      * @param p_id page id of the node on disk
      */
     Node(long p_id){
-        this->page_id = p_id;
-        this->initChildrensWithZeros();
+        page_id = p_id;
+        initChildrensWithZeros();
     };
 
     /**
@@ -46,9 +50,9 @@ class Node{
      * @param is_leaf 
      */
     Node(long p_id, bool is_leaf_flag){
-        this->page_id = p_id;
-        this->is_leaf = is_leaf_flag;
-        this->initChildrensWithZeros();
+        page_id = p_id;
+        is_leaf = is_leaf_flag;
+        initChildrensWithZeros();
     };
 
     /**
@@ -82,28 +86,17 @@ class Node{
       return n_keys > ORDER;
     }
 
-    /**
-     * @brief Set the next node object
-     * 
-     * @param next_page_id 
-     */
-    void setNextNode(long next_page_id){
-      next = next_page_id;
-    }
-
-    void setPrevNode(long prev_page_id){
-        prev = prev_page_id;
-    }
-
     friend class BPlusTree<T, ORDER>;
+    friend class BPlusTreeIterator<T,ORDER>;
 };
 
 template<typename T, int ORDER = 3>
 class BPlusTree{
 
   using node = bd2::Node<T,ORDER>;
+  using iterator = bd2::BPlusTreeIterator<T,ORDER>;
   using page = std::shared_ptr<ControlDisk>;
-  enum state { OVERFLOW, UNDERFLOW, NORMAL};
+  enum state { OVERFLOW, NORMAL};
 
   page control_disk; // control disk of the index file
 
@@ -114,7 +107,7 @@ class BPlusTree{
   public:
 
     BPlusTree(page c_disk){
-        this->control_disk = c_disk;
+        control_disk = c_disk;
         if (!control_disk->is_empty())
             control_disk->retrieve_record(0, header);
         else{  //Init the control disk
@@ -148,10 +141,10 @@ class BPlusTree{
     }
 
     void insert(const T &value){
-        node root = this->readNode(header.root_page_id);
-        int state = this->insert(root, value);
+        node root = readNode(header.root_page_id);
+        int state = insert(root, value);
         if (state == OVERFLOW) {
-            this->splitRoot();
+            splitRoot();
         }
     }
 
@@ -211,11 +204,17 @@ class BPlusTree{
         }
         right.children[i] = ptr.children[iter];
 
+        if (ptr.is_leaf){
+            left.next_node = right.page_id;
+            right.prev_node = left.page_id;
+        }
         ptr.children[pos] = left.page_id; //first child link to the left node
         ptr.keys[0] = ptr.keys[ORDER / 2];
         ptr.children[pos + 1] = right.page_id;
         ptr.n_keys = 1;
         ptr.is_leaf = false;
+
+
 
         writeNode(ptr.page_id, ptr);
         writeNode(left.page_id, left);
@@ -240,9 +239,9 @@ class BPlusTree{
         if (ptr.is_leaf) {
             left.keys[i] = ptr.keys[iter]; //left based split
             left.n_keys++;
-        }else{
-            //left.is_leaf = false;
-            //right.is_leaf = false;
+            left.next_node = right.page_id;
+            right.prev_node = left.page_id;
+            right.next_node = parent.children[pos + 1];
         }
         parent.insertKeyInPosition(pos, ptr.keys[iter]); //key promoted
 
@@ -257,9 +256,13 @@ class BPlusTree{
         }
         right.children[i] = ptr.children[iter];
 
+
         parent.children[pos] = left.page_id;
         parent.children[pos + 1] = right.page_id;
+
         parent.is_leaf = false;
+
+
 
         writeNode(parent.page_id, parent);
         writeNode(left.page_id, left);
@@ -312,10 +315,114 @@ class BPlusTree{
         }
     }
 
+    iterator begin(){
+        node temp = readNode(header.root_page_id);
+        while (!temp.is_leaf)
+            temp = readNode(temp.children[0]);
+        iterator my_iter (control_disk, temp.page_id);
+        return my_iter;
+    }
+
+    iterator end(){
+        iterator my_iter (control_disk, -1);
+        return my_iter;
+    }
 
     ~BPlusTree(){
     }
-  
+
+};
+
+template <class T, int ORDER>
+class BPlusTreeIterator{
+    using node = bd2::Node<T, ORDER>;
+    using page = std::shared_ptr<ControlDisk>;
+    long node_page_id; //node page id on disk
+    int keys_pos; //iterator for keys elements
+    page control_disk;
+
+    node readNode(long p_id){
+        node new_node(-1);
+        control_disk->retrieve_record(p_id, new_node);
+        return new_node;
+    }
+
+
+public:
+    friend class BPlusTree<T, ORDER>;
+
+
+    BPlusTreeIterator(page &cd, long npi){
+        control_disk = cd;
+        node_page_id = npi;
+        keys_pos = 0;
+    }
+
+    BPlusTreeIterator(page &cd, long npi, int keys_pos){
+        control_disk = cd;
+        node_page_id = npi;
+        keys_pos = keys_pos;
+    }
+
+    BPlusTreeIterator(const BPlusTreeIterator & bpti){
+        node_page_id = bpti.node_page_id;
+        control_disk = bpti.control_disk;
+        keys_pos = bpti.keys_pos;
+    }
+
+    BPlusTreeIterator& operator++(){
+        keys_pos++;
+        node temp = readNode(node_page_id);
+        if (keys_pos >= temp.n_keys){    //if we reach the end of the keys, go to the next node
+            node_page_id = temp.next_node;
+            keys_pos = 0;
+        }
+        return *this;
+    }
+    BPlusTreeIterator operator++(int){
+        BPlusTreeIterator tmp (*this);
+        operator++();
+        return tmp;
+    }
+
+    BPlusTreeIterator& operator--(){
+        keys_pos--;
+        node temp = readNode(node_page_id);
+        node_page_id = temp.prev_node;
+        if (keys_pos <= 0){    //if we reach the end of the keys, go to the next node
+            node_page_id = temp.prev_node;
+            keys_pos = temp.n_keys;
+        }
+        return *this;
+    }
+
+    BPlusTreeIterator operator--(int){
+        BPlusTreeIterator tmp (*this);
+        operator--();
+        return tmp;
+    }
+
+    BPlusTreeIterator& operator=(const BPlusTreeIterator& bpti){
+        keys_pos = bpti.keys_pos;
+        node_page_id = bpti.node_page_id;
+        control_disk = bpti.control_disk;
+    }
+
+    bool operator==(const BPlusTreeIterator& bpti){
+        bool nodes_equal = (node_page_id == bpti.node_page_id);
+        bool keys_pos_equal = (keys_pos == bpti.keys_pos);
+        return nodes_equal && keys_pos_equal;
+    }
+
+    bool operator!=(const BPlusTreeIterator& bpti){
+        return !((*this)==bpti);
+    }
+
+    T operator*(){
+        node temp = readNode(node_page_id);
+        return temp.keys[keys_pos];
+    }
+
 };
 
 }
