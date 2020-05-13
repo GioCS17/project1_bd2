@@ -394,31 +394,71 @@ public:
     ~BPlusTree(){
     }
 
-    /**
-     * @brief 
-     * 
-     * @param val 
-     */
-    long search (const T &val) {
+    bool findKey(const T &val){
         node root = readNode(header.disk_id);
-        long res = search (root, val);
-        return res;
+        int key_pos = -1;
+        long key_disk_id = findKey(root, val, key_pos);
+        if (key_disk_id == -1)
+            return false;
+        else
+            return true;
+    }
 
-        /*if (res == -1)
+    long findRecordId(const T &val){
+        node root = readNode(header.disk_id);
+        int key_pos = -1;
+        long key_disk_id = findKey(root, val, key_pos);
+        if (key_disk_id != -1){
+            node key_node = readNode(key_disk_id);
+            return key_node.records_id[key_pos];
+        }
+        return key_disk_id; //return -1
+    }
+
+
+    long findKey (node &ptr, const T &val, int &key_pos){
+        int pos = 0;
+        while (pos < ptr.n_keys && ptr.keys[pos] < val)
+            pos++;
+
+        if (!ptr.is_leaf){
+            long page_id = ptr.children [pos];
+            node child = readNode (page_id);
+            return search (child, val);
+        } else {
+            if (ptr.keys [pos] != val)
+                return -1;
+            else {
+                key_pos = pos;
+                return ptr.disk_id;
+            }
+        }
+
+    }
+
+/**
+     * @brief
+     *
+     * @param val
+     */
+    void search (const T &val) {
+        node root = readNode(header.disk_id);
+        int res = search (root, val);
+        if (res == -1)
             std::cout << "Not found\n";
         else
             std::cout << "Found!\n";
-        */
+
     }
 
     /**
-     * @brief 
-     * 
-     * @param ptr 
-     * @param val 
-     * @return int 
+     * @brief
+     *
+     * @param ptr
+     * @param val
+     * @return int
      */
-    long search (node &ptr, const T &val){
+    int search (node &ptr, const T &val){
         int pos = 0;
         while (pos < ptr.n_keys && ptr.keys[pos] < val)
             pos++;
@@ -431,7 +471,7 @@ public:
             if (ptr.keys [pos] != val){
                 return -1;
             }else {
-                long page_record = ptr.records_id[pos];
+                long page_record = ptr.children [pos];
                 return page_record;
             }
         }
@@ -439,11 +479,11 @@ public:
     }
 
     /**
-     * @brief 
-     * 
-     * @param first 
-     * @param end 
-     * @return std::vector<long> 
+     * @brief
+     *
+     * @param first
+     * @param end
+     * @return std::vector<long>
      */
     std::vector<long> range_search (const T &first, const T &end){
         node root = readNode(header.disk_id);
@@ -454,12 +494,12 @@ public:
 
 
     /**
-     * @brief 
-     * 
-     * @param ptr 
-     * @param first 
-     * @param second 
-     * @param res 
+     * @brief
+     *
+     * @param ptr
+     * @param first
+     * @param second
+     * @param res
      */
     void range_search (node &ptr, const T &first, const T &second, std::vector <long> &res){
         int pos = 0;
@@ -488,6 +528,8 @@ public:
             }
         }
     }
+
+
 
 };
 

@@ -2,6 +2,7 @@
 #include <b_plus_tree.h>
 #include <disk_manager.h>
 #include <data_base.h>
+#include <vector>
 
 #define PAGE_SIZE  64
 #define BTREE_ORDER   ((PAGE_SIZE - (2 * sizeof(long) + sizeof(int) +  2 * sizeof(long)) ) /  (sizeof(int) + sizeof(long)))
@@ -80,28 +81,7 @@ TEST_F(DiskBasedBtree, IteratorBack) {
     EXPECT_EQ(all_values, iter_values);
 }
 
-TEST_F(DiskBasedBtree, InsertNumbers) {
-    std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btreen.index");
-    using char_btree = bd2::BPlusTree<int, BTREE_ORDER>;
-    using char_btree_iterator = bd2::BPlusTreeIterator<int, BTREE_ORDER>;
-    char_btree bt(pm);
-    int number[10] = {9,8,7,6,5,4,3,2,1,0};
-    for (int i = 0; i < 10; i++){
-        bt.insert(number[i], i);
-        bt.showTree();
-    }
-    bt.showTree();
-    char_btree_iterator iter = bt.end();
-    int numbersa[10];
-    int pi = 9;
-    for(; iter != bt.null(); iter--) {
-        numbersa[pi] = *iter;
-        std::cout << *iter << ", ";
-        pi--;
-    }
-    std::cout << std::endl;
 
-}
 
 TEST_F(DiskBasedBtree, DatabaseInsert){
     struct Student {
@@ -120,16 +100,41 @@ TEST_F(DiskBasedBtree, DatabaseInsert){
 
         }
     };
-    bd2::DataBase<Student, long> db = bd2::DataBase<Student, long> ();
-
-
+    using database = bd2::DataBase<Student, long>;
+    bd2::DataBase<Student, long> db = bd2::DataBase<Student, long>();
     Student p {10, false,"alex","orihuela",150};
-    //p.show();
     db.insertWithBPlusTreeIndex(p,p.id);
     Student p1 {20, true,"Luis","sanchez",100};
-    //p1.show();
     db.insertWithBPlusTreeIndex(p1, p1.id);
-    Student p2 =  db.readRecord(10);
-    p2.show();
+    Student p2;
+    bool find = db.readRecord(p2, p1.id);
+    if (find){
+        std::cout << "Key finded: " << p1.id << std::endl;
+        std::cout << "Record obtained: "<< std::endl;
+        p2.show();
+        EXPECT_EQ(p1.id, p2.id);
+    }
 
+}
+
+
+TEST_F(DiskBasedBtree, InsertFromCSV){
+    int n = 10;
+    struct Default{
+        long id;
+        std::vector<std::string> args;
+        void show(){
+            std::cout << "pk: " << id << std::endl;
+            for (int i = 0; i < args.size(); i++){
+                std::cout << "args " << i + 1 << ": " << args[i] << std::endl;
+            }
+            std::cout << "--------------------------------" << std::endl;
+        }
+    };
+    bd2::DataBase<Default, long> db = bd2::DataBase<Default, long>();
+    db.loadFromExternalFile("input.txt", false);
+    Default d;
+    db.readRecord(d, 100);
+    d.show();
+    EXPECT_EQ(d.id, 100);
 }

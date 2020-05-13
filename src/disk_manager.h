@@ -28,7 +28,7 @@ class DiskManager : protected std::fstream{
     /**
      *@brief Default constructor
      */
-    DiskManager();
+    DiskManager(){ };
 
      /**
      * @brief Construct a new Disk Manager object to read and write nodes from disk
