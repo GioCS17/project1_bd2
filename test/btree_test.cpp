@@ -1,23 +1,9 @@
-
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <b_plus_tree.h>
 #include <disk_manager.h>
+#include <data_base.h>
 
-#include <fmt/core.h>
-
-// PAGE_SIZE 64 bytes
 #define PAGE_SIZE  64
-
-// Other examples:
-// PAGE_SIZE 1024 bytes => 1Kb
-// PAGE_SIZE 1024*1024 bytes => 1Mb
-
-// PAGE_SIZE = 2 * sizeof(long) +  (BTREE_ORDER + 1) * sizeof(int) + (BTREE_ORDER + 2) * sizeof(long)
-// PAGE_SIZE = 2 * sizeof(long) +  (BTREE_ORDER) * sizeof(int) + sizeof(int) + (BTREE_ORDER) * sizeof(long) + 2 * sizeof(long)
-// PAGE_SIZE = (BTREE_ORDER) * (sizeof(int) + sizeof(long))  + 2 * sizeof(long) + sizeof(int) +  2 * sizeof(long)
-//  BTREE_ORDER = PAGE_SIZE - (2 * sizeof(long) + sizeof(int) +  2 * sizeof(long)) /  (sizeof(int) + sizeof(long))
-
 #define BTREE_ORDER   ((PAGE_SIZE - (2 * sizeof(long) + sizeof(int) +  2 * sizeof(long)) ) /  (sizeof(int) + sizeof(long)))
 
 
@@ -94,3 +80,56 @@ TEST_F(DiskBasedBtree, IteratorBack) {
     EXPECT_EQ(all_values, iter_values);
 }
 
+TEST_F(DiskBasedBtree, InsertNumbers) {
+    std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btreen.index");
+    using char_btree = bd2::BPlusTree<int, BTREE_ORDER>;
+    using char_btree_iterator = bd2::BPlusTreeIterator<int, BTREE_ORDER>;
+    char_btree bt(pm);
+    int number[10] = {9,8,7,6,5,4,3,2,1,0};
+    for (int i = 0; i < 10; i++){
+        bt.insert(number[i], i);
+        bt.showTree();
+    }
+    bt.showTree();
+    char_btree_iterator iter = bt.end();
+    int numbersa[10];
+    int pi = 9;
+    for(; iter != bt.null(); iter--) {
+        numbersa[pi] = *iter;
+        std::cout << *iter << ", ";
+        pi--;
+    }
+    std::cout << std::endl;
+
+}
+
+TEST_F(DiskBasedBtree, DatabaseInsert){
+    struct Student {
+        long  id;
+        bool passed;
+        char name[32];
+        char surname[32];
+        int  n_credits;
+
+        void show(){
+            std:: cout << "id: " << id << std::endl;
+            std:: cout << "passed: " << passed << std::endl;
+            std:: cout << "name: " << name << std::endl;
+            std:: cout << "surname: " << surname << std::endl;
+            std:: cout << "n_credits: " << n_credits << std::endl;
+
+        }
+    };
+    bd2::DataBase<Student, long> db = bd2::DataBase<Student, long> ();
+
+
+    Student p {10, false,"alex","orihuela",150};
+    //p.show();
+    db.insertWithBPlusTreeIndex(p,p.id);
+    Student p1 {20, true,"Luis","sanchez",100};
+    //p1.show();
+    db.insertWithBPlusTreeIndex(p1, p1.id);
+    Student p2 =  db.readRecord(10);
+    p2.show();
+
+}

@@ -1,7 +1,7 @@
 /**
  * @file b_plus_tree_iterator.h
  * @author Juan Vargas Castillo (juan.vargas@utec.edu.pe)
- * @author Giordano Alvitez Falcón (giordano.alvitez.com)
+ * @author Giordano Alvitez Falcón (giordano.alvitez@utec.edu.pe)
  * @author Roosevelt.Ubaldo Chavez (roosevelt.ubaldo@utec.edu.pe)
  * @brief B+Tree Iterators Implementation, operators ++, --, dereference * were implented
  * @version 0.1

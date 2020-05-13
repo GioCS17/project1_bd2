@@ -11,13 +11,15 @@ namespace bd2{
 
         T keys [ORDER + 1];
         long children [ORDER + 2];
+        long records_id[ORDER + 1]; //id of the record on disk
 
         long n_keys = 0;
         bool is_leaf = false;
 
         long next_node  = -1; //link to the next node if is a leaf
         long prev_node = -1; //link to the previous node if is a leaf
-        long disk_id = -1; //id on disk
+        long disk_id = -1; //id of the index on disk
+
 
         void initChildrensWithZeros(){
             for (int i = 0; i < ORDER + 2; i++)
@@ -53,20 +55,19 @@ namespace bd2{
          * @param key_value
          * @param pos
          */
-        void insertKeyInPosition(int pos, const T &key_value){
+        void insertKeyInPosition(int pos, const T &key_value, const long record_id){
             //Move to the right until we find the pos of the key_value value
             for(int i = n_keys; i > pos; i--){
                 keys[i] = keys[i - 1];
+                records_id[i] = records_id[i - 1];
                 children[i + 1] = children[i];
             }
             keys[pos] = key_value;
+            records_id[pos] = record_id;
             children[pos + 1] = children [pos];
             n_keys += 1;
-        };
 
-        void updateKeyInposition(int pos, const T &key){
-            keys[pos] = key;
-        }
+        };
 
         /**
          * @brief Check is the node is in overflow
