@@ -81,7 +81,7 @@ class DataBase{
 
 
       bool readRecord(Record &record, Key key_value){
-          bool record_pos = index.findRecordId(key_value);
+          long record_pos = index.findRecordId(key_value);
           if (record_pos != -1 ){
               recordManager->retrieve_record(record_pos, record);
               return true;

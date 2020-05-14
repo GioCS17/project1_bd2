@@ -97,24 +97,36 @@ TEST_F(DiskBasedBtree, DatabaseInsert){
             std:: cout << "name: " << name << std::endl;
             std:: cout << "surname: " << surname << std::endl;
             std:: cout << "n_credits: " << n_credits << std::endl;
+            std::cout << "--------------------------------" << std::endl;
 
         }
     };
     using database = bd2::DataBase<Student, long>;
     bd2::DataBase<Student, long> db = bd2::DataBase<Student, long>();
-    Student p {10, false,"alex","orihuela",150};
+    Student p {10, false,"Alex","Kouri",150};
     db.insertWithBPlusTreeIndex(p,p.id);
-    Student p1 {20, true,"Luis","sanchez",100};
+    Student p1 {20, true,"Luis","Fujimori",10};
     db.insertWithBPlusTreeIndex(p1, p1.id);
-    Student p2;
-    bool find = db.readRecord(p2, p1.id);
-    if (find){
-        std::cout << "Key finded: " << p1.id << std::endl;
-        std::cout << "Record obtained: "<< std::endl;
-        p2.show();
-        EXPECT_EQ(p1.id, p2.id);
+    Student p2 {30, true,"Martin","Lapierre",120};
+    db.insertWithBPlusTreeIndex(p2, p2.id);
+    Student p3 {40, false,"Heider","McDonalds",110};
+    db.insertWithBPlusTreeIndex(p3, p3.id);
+    Student p4 {50, true,"Juan","Schmitchel",122};
+    db.insertWithBPlusTreeIndex(p4, p4.id);
+    Student p5 {60, false,"Peter","Schwaun",101};
+    db.insertWithBPlusTreeIndex(p5, p5.id);
+    for (int i = 10; i < 61; i = i + 10){
+        Student p_last{};
+        bool find = db.readRecord(p_last, i);
+        if (find){
+            std::cout << "****************************************" << std::endl;
+            std::cout << "Key finded: " << i << std::endl;
+            std::cout << "--------------------------------" << std::endl;
+            std::cout << "Record obtained: "<< std::endl;
+            p_last.show();
+            EXPECT_EQ(i, p_last.id);
+        }
     }
-
 }
 
 
@@ -132,7 +144,7 @@ TEST_F(DiskBasedBtree, InsertFromCSV){
         }
     };
     bd2::DataBase<Default, long> db = bd2::DataBase<Default, long>();
-    db.loadFromExternalFile("input.txt", false);
+    db.loadFromExternalFile("input.txt",1 , false);
     Default d;
     db.readRecord(d, 100);
     d.show();

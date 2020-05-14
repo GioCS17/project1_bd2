@@ -152,7 +152,7 @@ class BPlusTree{
 
         if (ptr_node.is_leaf){ //if is the first split of the root node
             left_node.keys[iter_child] = ptr_node.keys[iter_keys]; //left base split
-            left_node.records_id[iter_child] = left_node.records_id[iter_keys];
+            left_node.records_id[iter_child] = ptr_node.records_id[iter_keys];
             left_node.n_keys++;
         }
 
@@ -161,7 +161,7 @@ class BPlusTree{
         for (iter_child = 0; iter_keys < ORDER + 1; iter_child++) {  //copy to right node
             right_node.children[iter_child] = ptr_node.children[iter_keys];
             right_node.keys[iter_child] = ptr_node.keys[iter_keys];
-            right_node.records_id[iter_child] = right_node.records_id[iter_keys];
+            right_node.records_id[iter_child] = ptr_node.records_id[iter_keys];
             right_node.n_keys++;
             iter_keys++;
         }
@@ -233,7 +233,7 @@ class BPlusTree{
         for (iter_child = 0; iter_keys < ORDER + 1; iter_child++) {
             right_node.children[iter_child] = ptr_node.children[iter_keys];
             right_node.keys[iter_child] = ptr_node.keys[iter_keys];
-            right_node.records_id[iter_child] = right_node.records_id[iter_keys];
+            right_node.records_id[iter_child] = ptr_node.records_id[iter_keys];
             right_node.n_keys++;
 
             iter_keys++;
@@ -424,7 +424,7 @@ public:
         if (!ptr.is_leaf){
             long page_id = ptr.children [pos];
             node child = readNode (page_id);
-            return search (child, val);
+            return findKey(child, val, key_pos);
         } else {
             if (ptr.keys [pos] != val)
                 return -1;
