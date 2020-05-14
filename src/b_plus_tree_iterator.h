@@ -202,5 +202,10 @@ namespace bd2{
             return temp.keys[keys_pos];
         }
 
+        long getRecordId(){
+            node temp = readNode(node_disk_id);
+            return temp.records_id[keys_pos];
+        }
+
     };
 }

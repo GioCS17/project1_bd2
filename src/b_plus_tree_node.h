@@ -1,12 +1,13 @@
 #pragma once
 namespace bd2{
+
     template <class T, int ORDER>
     class BPlusTree;
 
     template <class T, int ORDER>
     class BPlusTreeIterator;
 
-    template<typename T, int ORDER>
+    template<class T, int ORDER>
     class Node{
 
         T keys [ORDER + 1];
@@ -19,7 +20,6 @@ namespace bd2{
         long next_node  = -1; //link to the next node if is a leaf
         long prev_node = -1; //link to the previous node if is a leaf
         long disk_id = -1; //id of the index on disk
-
 
         void initChildrensWithZeros(){
             for (int i = 0; i < ORDER + 2; i++)
@@ -35,6 +35,7 @@ namespace bd2{
         Node(long d_id){
             disk_id = d_id;
             initChildrensWithZeros();
+
         };
 
         /**

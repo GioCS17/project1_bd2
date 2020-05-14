@@ -107,7 +107,7 @@ class BPlusTree{
      * @param value
      * @return int
      */
-    int insert(node &ptr_node, const T &value, const long record_id){
+    int insert(node &ptr_node, const T value, const long record_id){
         int pos = 0;
 
         //find position on node
@@ -284,7 +284,7 @@ public:
      *
      * @param value
      */
-    void insert(const T &value, const long record_id = -1){
+    void insert(const T value, const long record_id = -1){
         node root = readNode(header.disk_id);
         int state = insert(root, value, record_id);
         if (state == OVERFLOW) {
@@ -398,7 +398,7 @@ public:
     ~BPlusTree(){
     }
 
-    bool findKey(const T &val){
+    bool isKeyPresent(const T &val){
         node root = readNode(header.disk_id);
         int key_pos = -1;
         long key_disk_id = findKey(root, val, key_pos);
@@ -408,7 +408,7 @@ public:
             return true;
     }
 
-    long findRecordId(const T &val){
+    long getRecordIdByKeyValue(const T &val){
         node root = readNode(header.disk_id);
         int key_pos = -1;
         long key_disk_id = findKey(root, val, key_pos);
@@ -417,6 +417,11 @@ public:
             return key_node.records_id[key_pos];
         }
         return key_disk_id; //return -1
+    }
+
+    void find(const T &val, long &record_id ,int &key_pos){
+        node root = readNode(header.disk_id);
+        record_id = findKey(root, val, key_pos);
     }
 
 
