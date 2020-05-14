@@ -120,7 +120,10 @@ blazingdb_artifact (
           bd2
 
         SOURCES
-        src/controldisk.h
+        src/disk_manager.h
+        src/b_plus_tree_iterator.h
+        src/b_plus_tree_node.h
+        src/data_base.h
 
         TESTS
         test/btree_test.cpp
