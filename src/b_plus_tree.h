@@ -218,13 +218,17 @@ class BPlusTree{
 
             //update the next and previous nodes
             left_node.next_node = right_node.disk_id;
+            left_node.prev_node = ptr_node.prev_node;
             right_node.prev_node = left_node.disk_id;
-            right_node.next_node = parent_node.children[pos + 1];
+            right_node.next_node = ptr_node.next_node;
 
             //update the previous node of the next node before split
-            node temp = readNode(right_node.next_node);
-            temp.prev_node = right_node.disk_id;
-            writeNode(temp.disk_id, temp);
+            if (right_node.next_node != -1){
+                node temp = readNode(right_node.next_node);
+                temp.prev_node = right_node.disk_id;
+                writeNode(temp.disk_id, temp);
+            }
+
         }
         parent_node.insertKeyInPosition(pos, ptr_node.keys[iter_keys], ptr_node.records_id[iter_keys]); //key promoted
 

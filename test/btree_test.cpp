@@ -20,10 +20,13 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
   std::cout << "BTREE_ORDER: " << BTREE_ORDER << std::endl;
   bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
 
-  std::string values = "zxcnmvfjda";
+  std::string values = "poiuytrewqasdfghjklmnbvcxz";
   for(auto c : values) {
-    bt.insert(c);
-    bt.showTree();
+      if (c == 'u'){
+          std::cout << "gaa" << std::endl;
+      }
+      bt.insert(c);
+      bt.showTree();
   }
   bt.showTree();
   std::ostringstream out;
@@ -35,14 +38,14 @@ TEST_F(DiskBasedBtree, IndexingRandomElements) {
 TEST_F(DiskBasedBtree, Persistence) {
     std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btree.index");
     bd2::BPlusTree<char, BTREE_ORDER> bt(pm);
-    std::string values = "be1986432";
+    std::string values = "1986432";
     for(auto c : values) {
         bt.insert(c);
         bt.showTree();
     }
     std::ostringstream out;
     bt.print(out);
-    std::string all_values = "zxcnmvfjdabe1986432";
+    std::string all_values = "poiuytrewqasdfghjklmnbvcxz1986432";
     std::sort(all_values.begin(), all_values.end());
     EXPECT_EQ(out.str(), all_values.c_str());
 }
@@ -59,7 +62,7 @@ TEST_F(DiskBasedBtree, IteratorFrom) {
       std::cout << *iter << ", ";
   }
   std::cout << std::endl;
-  std::string all_values = "zxcnmvfjdabe1986432";
+  std::string all_values = "poiuytrewqasdfghjklmnbvcxz1986432";
   std::sort(all_values.begin(), all_values.end());
   EXPECT_EQ(all_values, iter_values);
 }
@@ -76,7 +79,7 @@ TEST_F(DiskBasedBtree, IteratorBack) {
         std::cout << *iter << ", ";
     }
     std::cout << std::endl;
-    std::string all_values = "zxcnmvfjdabe1986432";
+    std::string all_values = "poiuytrewqasdfghjklmnbvcxz1986432";
     std::sort(all_values.begin(), all_values.end(), std::greater <>());
     EXPECT_EQ(all_values, iter_values);
 }
