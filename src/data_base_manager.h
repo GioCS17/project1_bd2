@@ -55,6 +55,16 @@ namespace bd2 {
             n_records++;
         }
 
+        void findWithoutIndex(Record &record, Key key_value){
+            for (int i = 0; i < n_records; i++){
+                Record r;
+                recordManager->retrieve_record(i, r);
+                if (r.id == key_value){
+                    break;
+                }
+            }
+        }
+
         void loadFromExternalFile(const std::string &filename) {
             std::fstream fileIn;
             fileIn.open(filename, std::ios::in | std::ios::binary);
@@ -63,9 +73,10 @@ namespace bd2 {
                 //r.show();
                 if (kind_of_index == 0)
                     insertWithBPlusTreeIndex(r, r.id, false);
-
                 else if (kind_of_index == 1)
                     insertWithStaticHashing(r);
+                else
+                    insertWithoutIndex(r);
             }
             fileIn.close();
         }
