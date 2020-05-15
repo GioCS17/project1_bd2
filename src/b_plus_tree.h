@@ -408,12 +408,14 @@ public:
             return true;
     }
 
-    long getRecordIdByKeyValue(const T &val){
+    long getRecordIdByKeyValue(const T &val, int &disk_access){
         node root = readNode(header.disk_id);
+        disk_access++;
         int key_pos = -1;
-        long key_disk_id = findKey(root, val, key_pos);
+        long key_disk_id = findKey(root, val, key_pos, disk_access);
         if (key_disk_id != -1){
             node key_node = readNode(key_disk_id);
+            disk_access++;
             return key_node.records_id[key_pos];
         }
         return key_disk_id; //return -1
@@ -424,6 +426,26 @@ public:
         record_id = findKey(root, val, key_pos);
     }
 
+    long findKey (node &ptr, const T &val, int &key_pos, int &disk_access){
+        int pos = 0;
+        while (pos < ptr.n_keys && ptr.keys[pos] < val)
+            pos++;
+
+        if (!ptr.is_leaf){
+            long page_id = ptr.children [pos];
+            node child = readNode (page_id);
+            disk_access++;
+            return findKey(child, val, key_pos, disk_access);
+        } else {
+            if (ptr.keys [pos] != val)
+                return -1;
+            else {
+                key_pos = pos;
+                return ptr.disk_id;
+            }
+        }
+
+    }
 
     long findKey (node &ptr, const T &val, int &key_pos){
         int pos = 0;

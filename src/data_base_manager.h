@@ -62,10 +62,11 @@ class DataBase{
           }
     }
       bool readRecord(Record &record, Key key_value){
-          //index.showTree();
-          long record_pos = index.getRecordIdByKeyValue(key_value);
+          int disk_access = 0;
+          long record_pos = index.getRecordIdByKeyValue(key_value, disk_access);
           if (record_pos != -1 ){
               recordManager->retrieve_record(record_pos, record);
+              std::cout << "Disk access: " <<disk_access << std::endl;
               return true;
           }
           return false;
