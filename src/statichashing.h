@@ -3,8 +3,6 @@
  * @author Juan Vargas Castillo (juan.vargas@utec.edu.pe)
  * @author Giordano Alvitez Falcón (giordano.alvitez@utec.edu.pe)
  * @author Roosevelt.Ubaldo Chavez (roosevelt.ubaldo@utec.edu.pe)
- * @brief StaticHashing Index Implementation based on the starting template
- * for a B-Tree implementation by Alexander Ocsa in ADA 2019-2
  * @version 0.1
  * @date 2020-05-12
  * @copyright Copyright (c) 2020

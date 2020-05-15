@@ -3,7 +3,8 @@
 #include <disk_manager.h>
 #include <data_base_manager.h>
 #include <vector>
-
+#include <cstdlib>
+#include <ctime>
 #define PAGE_SIZE  64
 #define BTREE_ORDER   ((PAGE_SIZE - (2 * sizeof(long) + sizeof(int) +  2 * sizeof(long)) ) /  (sizeof(int) + sizeof(long)))
 
@@ -206,31 +207,166 @@ TEST_F(DiskBasedBtree, InsertFromCSV) {
     d.show();
     EXPECT_EQ(d.id, 2);
 }
+struct Default
+{
+    int id;
+    char description [249];
+    char city [30];
+    char state [4];
+    char weather [35];
 
-/*
-TEST_F(DiskBasedBtree, InsertFromCSV){
-    int n = 10;
-    struct Default{
-        long id;
-        std::vector<std::string> args;
-        Default(){
-            args.reserve(3);
-            for (int i = 0; i < 3; i++){
-                args.at(i).reserve(10);
-            }
-        };
-        void show(){
-            std::cout << "pk: " << id << std::endl;
-            for (int i = 0; i < args.size(); i++){
-                std::cout << "args " << i + 1 << ": " << args[i] << std::endl;
-            }
-            std::cout << "--------------------------------" << std::endl;
-        }
-    };
-    bd2::DataBase<Default, long> db = bd2::DataBase<Default, long>();
-    db.loadFromExternalFile("input.txt",1 , false);
-    Default d;
-    db.readRecord(d, 100);
-    d.show();
-    EXPECT_EQ(d.id, 100);
-}*/
+    void show(){
+        std:: cout << "id: " << id << std::endl;
+        std:: cout << "desc: " << description << std::endl;
+        std:: cout << "city: " << city << std::endl;
+        std:: cout << "state: " << state << std::endl;
+        std:: cout << "weather: " << weather << std::endl;
+        std:: cout << "-------------------------------" << std::endl;        }
+};
+TEST_F(DiskBasedBtree, Insert1k) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data1k.bin");
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Insert10k) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10k.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10k.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data10k.bin");
+    //db.showTreeIndex();
+}
+TEST_F(DiskBasedBtree, Insert100k) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100k.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100k.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data100k.bin");
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Insert1M) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree1M.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1M.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data1M.bin");
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Find1k) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000);
+    Default r;
+    srand(time(NULL));
+    int idx = rand()%1000+1;
+    db.readRecord(r, idx);
+    std::cout << "Idx finded: " << idx << std::endl;
+    r.show();
+}
+
+TEST_F(DiskBasedBtree, Find10k) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10k.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10k.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 10000);
+    Default r;
+    srand(time(NULL));
+    const int idx = rand()%10000+1;
+    db.readRecord(r, idx);
+    std::cout << "Idx finded: " << idx << std::endl;
+    r.show();
+}
+TEST_F(DiskBasedBtree, Find100k) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100k.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100k.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 100000);
+    Default r;
+    db.readRecord(r, 50000);
+    r.show();
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Find1M) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree1M.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1M.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000000);
+    Default r;
+    db.readRecord(r, 500000);
+    r.show();
+    db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Insert1k_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data1k.bin");
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Insert10k_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10k.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10k.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data10k.bin");
+    //db.showTreeIndex();
+}
+TEST_F(DiskBasedBtree, Insert100k_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100k.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100k.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data100k.bin");
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Insert1M_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree1M.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1M.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    db.loadFromExternalFile("data1M.bin");
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Find1k_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000);
+    Default r;
+    db.readRecord(r, 500);
+    r.show();
+}
+
+TEST_F(DiskBasedBtree, Find10k_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10k.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10k.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 10000);
+    Default r;
+    db.readRecord(r, 5000);
+    r.show();
+}
+TEST_F(DiskBasedBtree, Find100k_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100k.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100k.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 100000);
+    Default r;
+    db.readRecord(r, 50000);
+    r.show();
+    //db.showTreeIndex();
+}
+
+TEST_F(DiskBasedBtree, Find1M_WithoutIndex) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree1M.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1M.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000000);
+    Default r;
+    db.readRecord(r, 500000);
+    r.show();
+}
+
+TEST_F(DiskBasedBtree, StaticHashing) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("static1k.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("static1k.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0, 1);
+    db.loadFromExternalFile("data1M.bin");
+}
