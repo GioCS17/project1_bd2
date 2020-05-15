@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <utility>
 
 #define B_ORDER 3
 
@@ -23,11 +24,11 @@ class DataBase{
           n_records = 0;
       }
 
-      DataBase(diskManager &idxMan, diskManager &recMan){
-          indexManager = idxMan;
-          recordManager = recMan;
+      DataBase(diskManager idxMan, diskManager recMan, int _n_records){
+          indexManager = std::move(idxMan);
+          recordManager = std::move(recMan);
           index = btree (indexManager);
-
+          n_records = _n_records;
       }
       void insertWithoutIndex(Record &record){
           recordManager->write_record(n_records, record);
@@ -68,6 +69,10 @@ class DataBase{
               return true;
           }
           return false;
+      }
+
+      void showTreeIndex(){
+          index.showTree();
       }
 
 };
