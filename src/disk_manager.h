@@ -62,6 +62,22 @@ class DiskManager : protected std::fstream{
         write(reinterpret_cast<const char*>(&reg),sizeof(reg));
       }
 
+
+      /**
+       * @brief Write a record to the file's end
+       * 
+       * @tparam Record 
+       * @param reg 
+       */
+      template<typename Record>
+      long write_record_toending(Record &reg){
+        clear(); //reset flags bit (goodbit, eofbit, failbit, badbit)
+        seekp(0,std::ios::end);
+        long pos=tellp();
+        write(reinterpret_cast<const char*>(&reg),sizeof(reg));
+        return pos;
+      }
+
     /**
      * @brief Read a record from a disk file and returns if was successfully
      *

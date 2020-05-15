@@ -18,7 +18,7 @@ int main(){
             std:: cout << "-------------------------------" << std::endl;        }
     };
 
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>();
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int,10000,20>();
     db.loadFromExternalFile("data_short.bin");
     Default d;
     db.readRecord(d, 3);

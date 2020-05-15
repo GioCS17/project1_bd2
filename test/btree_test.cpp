@@ -3,7 +3,8 @@
 #include <disk_manager.h>
 #include <data_base_manager.h>
 #include <vector>
-
+#include <cstdlib>
+#include <ctime>
 #define PAGE_SIZE  64
 #define BTREE_ORDER   ((PAGE_SIZE - (2 * sizeof(long) + sizeof(int) +  2 * sizeof(long)) ) /  (sizeof(int) + sizeof(long)))
 
@@ -258,7 +259,10 @@ TEST_F(DiskBasedBtree, Find1k) {
     std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree.index", false);
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000);
     Default r;
-    db.readRecord(r, 500);
+    srand(time(NULL));
+    int idx = rand()%1000+1;
+    db.readRecord(r, idx);
+    std::cout << "Idx finded: " << idx << std::endl;
     r.show();
 }
 
@@ -267,7 +271,10 @@ TEST_F(DiskBasedBtree, Find10k) {
     std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10k.index", false);
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 10000);
     Default r;
-    db.readRecord(r, 5000);
+    srand(time(NULL));
+    const int idx = rand()%10000+1;
+    db.readRecord(r, idx);
+    std::cout << "Idx finded: " << idx << std::endl;
     r.show();
 }
 TEST_F(DiskBasedBtree, Find100k) {
@@ -287,6 +294,7 @@ TEST_F(DiskBasedBtree, Find1M) {
     Default r;
     db.readRecord(r, 500000);
     r.show();
+    db.showTreeIndex();
 }
 
 TEST_F(DiskBasedBtree, Insert1k_WithoutIndex) {
@@ -354,4 +362,11 @@ TEST_F(DiskBasedBtree, Find1M_WithoutIndex) {
     Default r;
     db.readRecord(r, 500000);
     r.show();
+}
+
+TEST_F(DiskBasedBtree, StaticHashing) {
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("static1k.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("static1k.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0, 1);
+    db.loadFromExternalFile("data1M.bin");
 }
