@@ -1,4 +1,18 @@
-#include"controldisk.h"
+/**
+ * @file statishashing.h
+ * @author Juan Vargas Castillo (juan.vargas@utec.edu.pe)
+ * @author Giordano Alvitez Falcón (giordano.alvitez@utec.edu.pe)
+ * @author Roosevelt.Ubaldo Chavez (roosevelt.ubaldo@utec.edu.pe)
+ * @brief StaticHashing Index Implementation based on the starting template
+ * for a B-Tree implementation by Alexander Ocsa in ADA 2019-2
+ * @version 0.1
+ * @date 2020-05-12
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
+ #pragma once
+#include "disk_manager.h"
 #include<memory>
 #include<queue>
 #include<vector>
@@ -6,12 +20,13 @@
 
 namespace bd2{
 
-  template<typename T,int fd>
-  class Bucket{
+  template<int fd>
+  class Bucket_S{
+    public:
       int size;
       long address[fd];
       long NextBucket;
-      Bucket(){
+      Bucket_S(){
         NextBucket=-1;
       }
   };
@@ -19,13 +34,16 @@ namespace bd2{
   template<typename T,int gd,int fd>
   class StaticHashing{
 
-    using page = std::shared_ptr<ControlDisk>; 
+    using page = std::shared_ptr<DiskManager>; 
     using value_key = T;
+    using Bucket = Bucket_S<fd>;
 
     page control_bucket;
     page control_data;
 
     public:
+    StaticHashing(){
+    }
 
     StaticHashing(page c_bucket, page c_data){
 
@@ -58,17 +76,14 @@ namespace bd2{
 
       if(bucket.size==fd){
         Bucket new_bucket;
-        new_bucket.ld=bucket.ld;
         new_bucket.address[0]=address_register;
-        new_bucket.keys[0]=key;
         new_bucket.size=1;
         long pos=control_bucket->write_record_toending(new_bucket);
         bucket.NextBucket=pos;
-        control_bucket->write_record(pair_addr.first,bucket);
+        control_bucket->write_record(address_bucket,bucket);
       }
       else{
         bucket.address[bucket.size]=address_register;
-        bucket.keys[bucket.size]=key;
         bucket.size++;
         control_bucket->write_record(address_bucket,bucket);
       }
@@ -81,7 +96,7 @@ namespace bd2{
 
     std::vector<long> search(value_key begin, value_key end){
       std::vector<long> result;
-      for(value_k i=begin;;i=next_value(i)){
+      for(value_key i=begin;;i=next_value(i)){
         long hash=getHash(i);
         long address_bucket=hash;
         Bucket bucket;
@@ -95,7 +110,7 @@ namespace bd2{
         if(i==end)
           break;
       }
-      return resutl;
+      return result;
     }
 
   };

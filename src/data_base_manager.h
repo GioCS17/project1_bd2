@@ -1,4 +1,5 @@
 #include "b_plus_tree.h"
+#include "statichashing.h"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -7,20 +8,31 @@
 
 namespace bd2{
 
-template<typename Record, typename Key>
+template<typename Record, typename Key,int gd=10000,int fd=20>
 class DataBase{
   using diskManager = std::shared_ptr<bd2::DiskManager>;
   using btree = bd2::BPlusTree<Key, B_ORDER>;
+  using staticHashing= bd2::StaticHashing<Key,gd,fd>;
   long n_records;
   diskManager indexManager;
   diskManager recordManager;
+  diskManager bucketManager;
   btree index;
+  staticHashing indexSH;
+  int kind_of_index;
   public:
-      DataBase(){
-          indexManager = std::make_shared<bd2::DiskManager>("data.index", true);
-          recordManager = std::make_shared<bd2::DiskManager>("data.bin", true);
-          index = btree (indexManager);
+      DataBase(int k_index=0){
           n_records = 0;
+          recordManager = std::make_shared<bd2::DiskManager>("data.bin", true);
+          kind_of_index=k_index;
+          if(k_index==0){
+            indexManager = std::make_shared<bd2::DiskManager>("data.index", true);
+            index = btree (indexManager);
+          }
+          if(k_index==1){
+            bucketManager= std::make_shared<bd2::DiskManager>("bucket.bin", true);
+            indexSH = staticHashing(bucketManager,recordManager);
+          }
       }
 
       DataBase(diskManager &idxMan, diskManager &recMan){
@@ -39,7 +51,11 @@ class DataBase{
           Record r;
           while (fileIn.read((char *)&r, sizeof(r))){
               //r.show();
-              insertWithBPlusTreeIndex(r, r.id, false);
+              if(kind_of_index==0)
+                insertWithBPlusTreeIndex(r, r.id, false);
+
+              else if(kind_of_index==1)
+                insertWithStaticHashing(r);
           }
           fileIn.close();
       }
@@ -68,6 +84,14 @@ class DataBase{
               return true;
           }
           return false;
+      }
+
+
+      //Statis Hashing Methods
+      void insertWithStaticHashing(Record &record){
+        recordManager->write_record(n_records,record);
+        indexSH.insert(n_records,record.id);
+        n_records++;
       }
 
 };
