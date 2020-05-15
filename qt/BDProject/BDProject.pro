@@ -20,11 +20,7 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
-    b_plus_tree_node.h \
-    data_base_manager.h \
-    disk_manager.h \
-    mainwindow.h \
-    statichashing.h
+    mainwindow.h
 
 FORMS += \
     mainwindow.ui

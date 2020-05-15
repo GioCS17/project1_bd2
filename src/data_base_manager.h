@@ -98,6 +98,20 @@ namespace bd2 {
             return false;
         }
 
+        bool readRecordRange (std::vector<Record> &vector_record, Key first, Key last){
+            std::vector <long> pos_records = index.range_search (first, last);
+            for (long pos_ : pos_records){
+                if (pos_ != -1) {
+                    Record new_r;
+                    recordManager->retrieve_record(pos_, new_r);
+                    vector_record.push_back (new_r);
+                }
+            }
+            if (vector_record.size () > 0)
+                return true;
+            return false;
+        }
+
 
         void showTreeIndex() {
             index.showTree();

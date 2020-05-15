@@ -543,14 +543,16 @@ public:
             range_search (child, first, second, res);
         } else {
             if (ptr.keys [pos] >= first){
-                std::cout << ptr.keys [pos] << " - ";
-                res.push_back (ptr.children [pos]);
+                std::cout << ptr.keys [pos] << "." << ptr.disk_id << " - ";
+                //res.push_back (ptr.children [pos]);
+                res.push_back (ptr.records_id[pos]);
             }
             pos++;
             node temp = ptr;
             while (temp.keys [pos] <= second && pos < temp.n_keys){
-                std::cout << temp.keys [pos] << " - ";
-                res.push_back (temp.children [pos]);
+                std::cout << temp.keys [pos] << "." << temp.disk_id << " - ";
+                //res.push_back (temp.children [pos]);
+                res.push_back (temp.records_id[pos]);
                 pos++;
                 if (pos == temp.n_keys ){
                     temp = readNode (temp.next_node);

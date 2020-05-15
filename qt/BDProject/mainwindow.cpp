@@ -27,7 +27,7 @@ void MainWindow::on_pushButton_clicked()
     for (int var = 0; var < queries.size(); ++var) {
         query = queries.at(var);
         //create table
-        if (query.contains("create table ", Qt::CaseInsensitive)){
+        if (query.contains("create table ")){
             int ind = query.indexOf("create table ");
             int pos = ind + QString("create table ").size();
             QString res = query.mid(pos , query.size() - pos);
@@ -53,8 +53,8 @@ void MainWindow::on_pushButton_clicked()
 
             QFileInfo check_file(namedb + ".dat");
             if (check_file.exists() && check_file.isFile()) {
-                std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>((namedb + ".dat").toUtf8().constData(), true);
-                std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>((namedb + ".index").toUtf8().constData(), true);
+                std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>((namedb + ".dat").toUtf8().constData(), false);
+                std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>((namedb + ".index").toUtf8().constData(), false);
                 bd2::DataBase<Default, int> dbconsult = bd2::DataBase<Default, int>(index, data, 0);
                 if (query.contains("from ")){
                     ind = query.indexOf("from ");
@@ -86,7 +86,8 @@ void MainWindow::on_pushButton_clicked()
                         strcpy(new_elem.city, entry.at(2).toUtf8().constData());
                         strcpy(new_elem.state, entry.at(3).toUtf8().constData());
                         strcpy(new_elem.weather, entry.at(4).toUtf8().constData());
-                        dbconsult.insertWithBPlusTreeIndex(new_elem, new_elem.id, false);
+                        new_elem.show();
+                        dbconsult.insertWithBPlusTreeIndex(new_elem, new_elem.id, true);
                         ui->donebutton->setText("Insertado nuevo elemento");
                     }
                 }
@@ -124,25 +125,70 @@ void MainWindow::on_pushButton_clicked()
                 }
                 else if (subquery.contains("where ")) {
                     if (subquery.contains("where key")){
-                        subquery.remove(QChar('='), Qt::CaseSensitive);
-                        subquery.remove(QChar(' '), Qt::CaseSensitive);
-                        ind = subquery.indexOf("wherekey");
-                        pos = ind + QString("wherekey").size();
-                        subquery = subquery.mid(pos , subquery.size() - pos);
-                        std::cout << subquery.toUtf8().constData();
-                        ui->tableWidget->setRowCount(0);
-                        std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>((namedb + ".dat").toUtf8().constData(), false);
-                        std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>((namedb + ".index").toUtf8().constData(), false);
-                        bd2::DataBase<Default, int> dbconsult = bd2::DataBase<Default, int>(index, data, 0);
-                        Default d;
-                        dbconsult.readRecord(d, atoi(subquery.toUtf8().constData()));
-                        ui->tableWidget->insertRow(ui->tableWidget->rowCount());
-                        ui->tableWidget->setItem(0, 0, new QTableWidgetItem(QString::number(d.id)) );
-                        ui->tableWidget->setItem(0, 1, new QTableWidgetItem(d.description) );
-                        ui->tableWidget->setItem(0, 2, new QTableWidgetItem(d.city) );
-                        ui->tableWidget->setItem(0, 3, new QTableWidgetItem(d.state) );
-                        ui->tableWidget->setItem(0, 4, new QTableWidgetItem(d.weather) );
-                        ui->donebutton->setText("Select with key correct");
+                        if (subquery.contains("=")){
+                            subquery.remove(QChar('='), Qt::CaseSensitive);
+                            subquery.remove(QChar(' '), Qt::CaseSensitive);
+                            ind = subquery.indexOf("wherekey");
+                            pos = ind + QString("wherekey").size();
+                            subquery = subquery.mid(pos , subquery.size() - pos);
+                            ui->tableWidget->setRowCount(0);
+                            std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>((namedb + ".dat").toUtf8().constData(), false);
+                            std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>((namedb + ".index").toUtf8().constData(), false);
+                            bd2::DataBase<Default, int> dbconsult = bd2::DataBase<Default, int>(index, data, 0);
+                            Default d;
+                            dbconsult.readRecord(d, atoi(subquery.toUtf8().constData()));
+                            ui->tableWidget->insertRow(ui->tableWidget->rowCount());
+                            ui->tableWidget->setItem(0, 0, new QTableWidgetItem(QString::number(d.id)) );
+                            ui->tableWidget->setItem(0, 1, new QTableWidgetItem(d.description) );
+                            ui->tableWidget->setItem(0, 2, new QTableWidgetItem(d.city) );
+                            ui->tableWidget->setItem(0, 3, new QTableWidgetItem(d.state) );
+                            ui->tableWidget->setItem(0, 4, new QTableWidgetItem(d.weather) );
+                            ui->tableWidget->resizeColumnsToContents();
+                            ui->donebutton->setText("Select with key correct");
+                        }
+                        else if (subquery.contains("between ") && subquery.contains(" and ")){
+                            ind = subquery.indexOf("between ");
+                            pos = ind + QString("between ").size();
+                            subquery = subquery.mid(pos , subquery.size() - pos);
+                            subquery.remove("and", Qt::CaseSensitive);
+                            QStringList lim = subquery.split(" ");
+                            lim.removeDuplicates();
+                            if (lim.size() == 2 || lim.size() == 3){
+                                ui->tableWidget->setRowCount(0);
+                                std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>((namedb + ".dat").toUtf8().constData(), false);
+                                std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>((namedb + ".index").toUtf8().constData(), false);
+                                bd2::DataBase<Default, int> dbconsult = bd2::DataBase<Default, int>(index, data, 0);
+
+                                if (lim.size() == 3)
+                                    lim.removeAt(1);
+                                int lim1 = atoi(lim.at(0).toUtf8().constData());
+                                int lim2 = atoi(lim.at(1).toUtf8().constData());
+                                std::vector <Default> range;
+                                bool srange = dbconsult.readRecordRange(range, lim1, lim2);
+                                if (srange) {
+                                    for (int i = 0; i < (int) range.size(); i++){
+                                        Default d = range [i];
+                                        ui->tableWidget->insertRow(ui->tableWidget->rowCount());
+                                        ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(d.id)) );
+                                        ui->tableWidget->setItem(i, 1, new QTableWidgetItem(d.description) );
+                                        ui->tableWidget->setItem(i, 2, new QTableWidgetItem(d.city) );
+                                        ui->tableWidget->setItem(i, 3, new QTableWidgetItem(d.state) );
+                                        ui->tableWidget->setItem(i, 4, new QTableWidgetItem(d.weather) );
+                                    }
+                                    ui->tableWidget->resizeColumnsToContents();
+                                    ui->donebutton->setText("Consulta por rango");
+                                }
+                                else {
+                                    ui->donebutton->setText("Error en consulta por rango");
+                                }
+                            }
+                            else {
+                                ui->donebutton->setText("Error en consulta por rango, limites exedidos");
+                            }
+                        }
+                        else {
+                            ui->donebutton->setText("Error en consulta select");
+                        }
                     }
                     else{
                         ui->donebutton->setText("Debe hacer una consulta con la primary key");
