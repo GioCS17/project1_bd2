@@ -6,7 +6,7 @@
 #include <utility>
 #include <thread>
 
-#define B_ORDER 3
+#define B_ORDER 1000
 
 namespace bd2 {
 
