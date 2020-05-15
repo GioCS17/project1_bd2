@@ -18,9 +18,14 @@ int main(){
             std:: cout << "-------------------------------" << std::endl;        }
     };
 
+    /*
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int,10000,20>();
     db.loadFromExternalFile("data_short.bin");
     Default d;
     db.readRecord(d, 3);
     d.show();
+    */
+
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(1);
+    db.loadFromExternalFile("data1k.csv");
 }

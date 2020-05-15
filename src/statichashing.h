@@ -29,6 +29,7 @@ namespace bd2{
       long NextBucket;
       Bucket_S(){
         NextBucket=-1;
+        size=0;
       }
   };
 
@@ -64,6 +65,7 @@ namespace bd2{
 
     void insert(long address_register,value_key key){
 
+
       long hash=getHash(key);
       long address_bucket=hash;
 
@@ -74,7 +76,7 @@ namespace bd2{
         if(bucket.NextBucket!=-1)
           address_bucket=bucket.NextBucket;
       }
-      while(bucket.NextBucket!=-1);
+      while(bucket.NextBucket>0);
 
       if(bucket.size==fd){
         Bucket new_bucket;
@@ -111,7 +113,7 @@ namespace bd2{
         }
         address_bucket=bucket.NextBucket;
       }
-      while(bucket.NextBucket!=-1);
+      while(bucket.NextBucket>0);
       return -1;
     }
     std::vector<long> search_by_range(value_key begin, value_key end){
@@ -126,7 +128,7 @@ namespace bd2{
           for(int j=0;j<bucket.size;j++)
             result.push_back(bucket.address[j]);
         }
-        while(bucket.NextBucket!=-1);
+        while(bucket.NextBucket>0);
         if(i==end)
           break;
       }
@@ -145,7 +147,7 @@ namespace bd2{
             std::cout<<bucket.keys[j]<<"/";
           address_bucket=bucket.NextBucket;
         }
-        while(bucket.NextBucket!=-1);
+        while(bucket.NextBucket>0);
         std::cout<<std::endl;
       }
     }
