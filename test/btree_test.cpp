@@ -310,68 +310,68 @@ TEST_F(DiskBasedBtree, Insert1k_WithoutIndex) {
     std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btreew.index", true);
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0,-1);
     db.loadFromExternalFile("data1k.bin");
-    Default r;
-    db.findWithoutIndex(r, 500);
-    r.show();
     //db.showTreeIndex();
 }
 
 TEST_F(DiskBasedBtree, Insert10k_WithoutIndex) {
-    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10k.dat", true);
-    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10k.index", true);
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10kw.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10kw.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0, -1);
     db.loadFromExternalFile("data10k.bin");
     //db.showTreeIndex();
 }
 TEST_F(DiskBasedBtree, Insert100k_WithoutIndex) {
-    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100k.dat", true);
-    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100k.index", true);
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100kw.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100kw.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0, -1);
     db.loadFromExternalFile("data100k.bin");
     //db.showTreeIndex();
 }
 
 TEST_F(DiskBasedBtree, Insert1M_WithoutIndex) {
-    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree1M.dat", true);
-    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1M.index", true);
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0);
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree1Mw.dat", true);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1Mw.index", true);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 0, -1);
     db.loadFromExternalFile("data1M.bin");
     //db.showTreeIndex();
 }
 
 TEST_F(DiskBasedBtree, Find1k_WithoutIndex) {
-    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree.dat", false);
-    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree.index", false);
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000);
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btreew.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btreew.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000, -1);
     Default r;
-    db.readRecord(r, 500);
+    int d;
+    db.findWithoutIndex(r,500,d);
     r.show();
 }
 
 TEST_F(DiskBasedBtree, Find10k_WithoutIndex) {
-    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10k.dat", false);
-    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10k.index", false);
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 10000);
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree10kw.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree10kw.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 10000, -1);
     Default r;
-    db.readRecord(r, 5000);
+    int d;
+    db.findWithoutIndex(r,5000,d);
     r.show();
 }
 TEST_F(DiskBasedBtree, Find100k_WithoutIndex) {
-    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100k.dat", false);
-    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100k.index", false);
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 100000);
+    std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree100kw.dat", false);
+    std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100kw.index", false);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 100000, -1);
     Default r;
-    db.readRecord(r, 50000);
+    int d;
+    db.findWithoutIndex(r,50000,d);
     r.show();
-    //db.showTreeIndex();
 }
 
 TEST_F(DiskBasedBtree, Find1M_WithoutIndex) {
     std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>("btree1M.dat", false);
     std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1M.index", false);
-    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000000);
+    bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000000, -1);
     Default r;
-    db.readRecord(r, 500000);
+    int d;
+    db.findWithoutIndex(r,500000,d);
     r.show();
 }
 

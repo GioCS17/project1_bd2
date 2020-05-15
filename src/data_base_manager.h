@@ -55,11 +55,13 @@ namespace bd2 {
             n_records++;
         }
 
-        void findWithoutIndex(Record &record, Key key_value){
+        void findWithoutIndex(Record &record, Key key_value, int &disk_access){
+            disk_access = 0;
             for (int i = 0; i < n_records; i++){
-                Record r;
-                recordManager->retrieve_record(i, r);
-                if (r.id == key_value){
+                recordManager->retrieve_record(i, record);
+                disk_access++;
+                if (record.id == key_value){
+                    std::cout << "Disk access: " << disk_access << std::endl;
                     break;
                 }
             }
