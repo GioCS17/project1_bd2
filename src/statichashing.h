@@ -71,7 +71,8 @@ namespace bd2{
 
       do{
         control_bucket->retrieve_record(address_bucket,bucket);
-        address_bucket=bucket.NextBucket;
+        if(bucket.NextBucket!=-1)
+          address_bucket=bucket.NextBucket;
       }
       while(bucket.NextBucket!=-1);
 

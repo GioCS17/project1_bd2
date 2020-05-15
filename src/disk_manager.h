@@ -75,6 +75,7 @@ class DiskManager : protected std::fstream{
         seekp(0,std::ios::end);
         long pos=tellp();
         write(reinterpret_cast<const char*>(&reg),sizeof(reg));
+        pos/=sizeof(reg);
         return pos;
       }
 
