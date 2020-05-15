@@ -109,5 +109,13 @@ namespace bd2 {
             indexSH.insert(n_records, record.id);
             n_records++;
         }
+        bool readRecord_SH(Record &record,Key key_value){
+          long record_pos = indexSH.search(key_value);
+          if(record_pos!=-1){
+            recordManager->retrieve_record(record_pos,record);
+            return true;
+          }
+          return false;
+        }
     };
 }

@@ -14,15 +14,18 @@
 #include<memory>
 #include<queue>
 #include<vector>
+#include<iostream>
 
 
 namespace bd2{
 
-  template<int fd>
+  template<typename T,int fd>
   class Bucket_S{
+    using value_key = T;
     public:
       int size;
       long address[fd];
+      value_key keys[fd];
       long NextBucket;
       Bucket_S(){
         NextBucket=-1;
@@ -34,7 +37,7 @@ namespace bd2{
 
     using page = std::shared_ptr<DiskManager>; 
     using value_key = T;
-    using Bucket = Bucket_S<fd>;
+    using Bucket = Bucket_S<T,fd>;
 
     page control_bucket;
     page control_data;
@@ -75,6 +78,7 @@ namespace bd2{
       if(bucket.size==fd){
         Bucket new_bucket;
         new_bucket.address[0]=address_register;
+        new_bucket.keys[0]=key;
         new_bucket.size=1;
         long pos=control_bucket->write_record_toending(new_bucket);
         bucket.NextBucket=pos;
@@ -82,6 +86,7 @@ namespace bd2{
       }
       else{
         bucket.address[bucket.size]=address_register;
+        bucket.keys[bucket.size]=key;
         bucket.size++;
         control_bucket->write_record(address_bucket,bucket);
       }
@@ -93,7 +98,22 @@ namespace bd2{
       return t;
     }
 
-    std::vector<long> search(value_key begin, value_key end){
+    long search(value_key key){
+      long hash=getHash(key);
+      long address_bucket=hash;
+      Bucket bucket;
+      do{
+        control_bucket->retrieve_record(address_bucket,bucket);
+        for(int j=0;j<bucket.size;j++){
+          if(bucket.keys[j]==key)
+            return bucket.address[j];
+        }
+        address_bucket=bucket.NextBucket;
+      }
+      while(bucket.NextBucket!=-1);
+      return -1;
+    }
+    std::vector<long> search_by_range(value_key begin, value_key end){
       std::vector<long> result;
       for(value_key i=begin;;i=next_value(i)){
         long hash=getHash(i);
@@ -110,6 +130,23 @@ namespace bd2{
           break;
       }
       return result;
+    }
+
+    void print(){
+      Bucket bucket;
+      long address_bucket;
+      for(long i=0;i<gd;i++){
+        std::cout<<"Bucket's Index "<<i<<std::endl;
+        address_bucket=i;
+        do{
+          control_bucket->retrieve_record(address_bucket,bucket);
+          for(int j=0;j<bucket.size;j++)
+            std::cout<<bucket.keys[j]<<"/";
+          address_bucket=bucket.NextBucket;
+        }
+        while(bucket.NextBucket!=-1);
+        std::cout<<std::endl;
+      }
     }
 
   };
