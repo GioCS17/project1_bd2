@@ -123,7 +123,7 @@ blazingdb_artifact (
         src/disk_manager.h
         src/b_plus_tree_iterator.h
         src/b_plus_tree_node.h
-        src/data_base.h
+        src/data_base_manager.h
 
         TESTS
         test/btree_test.cpp

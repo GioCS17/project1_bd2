@@ -5,9 +5,10 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
 #define PAGE_SIZE  64
 #define BTREE_ORDER   ((PAGE_SIZE - (2 * sizeof(long) + sizeof(int) +  2 * sizeof(long)) ) /  (sizeof(int) + sizeof(long)))
-
+using namespace std::chrono;
 
 struct DiskBasedBtree : public ::testing::Test
 {
@@ -261,6 +262,7 @@ TEST_F(DiskBasedBtree, Find1k) {
     Default r;
     srand(time(NULL));
     int idx = rand()%1000+1;
+
     db.readRecord(r, idx);
     std::cout << "Idx finded: " << idx << std::endl;
     r.show();
@@ -272,7 +274,7 @@ TEST_F(DiskBasedBtree, Find10k) {
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 10000);
     Default r;
     srand(time(NULL));
-    const int idx = rand()%10000+1;
+    int idx = rand()%10000+1;
     db.readRecord(r, idx);
     std::cout << "Idx finded: " << idx << std::endl;
     r.show();
@@ -282,7 +284,10 @@ TEST_F(DiskBasedBtree, Find100k) {
     std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree100k.index", false);
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 100000);
     Default r;
-    db.readRecord(r, 50000);
+    srand(time(NULL));
+    int idx = rand()%100000+1;
+    db.readRecord(r, idx);
+    std::cout << "Idx finded: " << idx << std::endl;
     r.show();
     //db.showTreeIndex();
 }
@@ -292,9 +297,12 @@ TEST_F(DiskBasedBtree, Find1M) {
     std::shared_ptr<bd2::DiskManager> index = std::make_shared<bd2::DiskManager>("btree1M.index", false);
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(index, data, 1000000);
     Default r;
-    db.readRecord(r, 500000);
+    srand(time(NULL));
+    int idx = rand()%1000000+1;
+    db.readRecord(r, idx);
+    std::cout << "Idx finded: " << idx << std::endl;
     r.show();
-    db.showTreeIndex();
+    //db.showTreeIndex();
 }
 
 TEST_F(DiskBasedBtree, Insert1k_WithoutIndex) {
