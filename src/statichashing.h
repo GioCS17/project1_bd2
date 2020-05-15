@@ -73,7 +73,7 @@ namespace bd2{
 
       do{
         control_bucket->retrieve_record(address_bucket,bucket);
-        if(bucket.NextBucket!=-1)
+        if(bucket.NextBucket>0)
           address_bucket=bucket.NextBucket;
       }
       while(bucket.NextBucket>0);
@@ -136,11 +136,11 @@ namespace bd2{
     }
 
     void print(){
-      Bucket bucket;
       long address_bucket;
-      for(long i=0;i<gd;i++){
+      for(long i=0;i<(long)gd;i++){
         std::cout<<"Bucket's Index "<<i<<std::endl;
         address_bucket=i;
+        Bucket bucket;
         do{
           control_bucket->retrieve_record(address_bucket,bucket);
           for(int j=0;j<bucket.size;j++)

@@ -6,7 +6,7 @@ int main(){
         int id;
         char description [249];
         char city [30];
-        char state [2];
+        char state [4];
         char weather [35];
 
         void show(){
@@ -27,5 +27,6 @@ int main(){
     */
 
     bd2::DataBase<Default, int> db = bd2::DataBase<Default, int>(1);
-    db.loadFromExternalFile("data1k.csv");
+    db.loadFromExternalFile("data1k.bin");
+    db.showStaticHashingIndex();
 }

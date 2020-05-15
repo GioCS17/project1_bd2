@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <thread>
 
 #define B_ORDER 3
 
@@ -65,7 +66,10 @@ namespace bd2 {
                     insertWithBPlusTreeIndex(r, r.id, false);
 
                 else if (kind_of_index == 1)
+                {
+                    //std::cout<<"ID register::"<<r.id<<std::endl;
                     insertWithStaticHashing(r);
+                }
             }
             fileIn.close();
         }
@@ -119,6 +123,12 @@ namespace bd2 {
         }
         void showStaticHashingIndex() {
             indexSH.print();
+        }
+
+        //Methos With Threads
+        void insertWithThreads(int size,int n_threads){
+            std::vector<std::thread> threads;
+           // for(int i=0;i<)
         }
     };
 }
