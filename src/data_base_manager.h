@@ -117,5 +117,8 @@ namespace bd2 {
           }
           return false;
         }
+        void showStaticHashingIndex() {
+            indexSH.print();
+        }
     };
 }
