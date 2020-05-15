@@ -90,6 +90,7 @@ namespace bd2{
     }
     value_key next_value(value_key value){
       value_key t;
+      t=value+1;
       //next_
       return t;
     }
