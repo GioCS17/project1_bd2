@@ -104,16 +104,21 @@ namespace bd2{
     long search(value_key key){
       long hash=getHash(key);
       long address_bucket=hash;
+      int disk_accesses=0;
       Bucket bucket;
       do{
         control_bucket->retrieve_record(address_bucket,bucket);
+        disk_accesses++;
         for(int j=0;j<bucket.size;j++){
-          if(bucket.keys[j]==key)
+          if(bucket.keys[j]==key){
+            std::cout<<"Disk access ::"<<disk_accesses+1<<std::endl;
             return bucket.address[j];
+          }
         }
         address_bucket=bucket.NextBucket;
       }
       while(bucket.NextBucket>0);
+      std::cout<<"Disk access ::"<<disk_accesses<<std::endl;
       return -1;
     }
     std::vector<long> search_by_range(value_key begin, value_key end){
