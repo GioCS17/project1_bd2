@@ -142,5 +142,10 @@ namespace bd2 {
             std::vector<std::thread> threads;
            // for(int i=0;i<)
         }
+        void insertThread(long begin,long end){
+            //recordManager->write_record(n_records, record);
+            //indexSH.insert(n_records, record.id);
+            n_records++;
+        }
     };
 }
