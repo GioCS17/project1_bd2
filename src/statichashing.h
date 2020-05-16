@@ -19,6 +19,12 @@
 
 namespace bd2{
 
+/**
+ * @brief Bucket_S class
+ * 
+ * @tparam T type of the key value
+ * @tparam fd max size in each Bucket's object
+ */
   template<typename T,int fd>
   class Bucket_S{
     using value_key = T;
@@ -33,6 +39,13 @@ namespace bd2{
       }
   };
 
+/**
+ * @brief StaticHashing class
+ * 
+ * @tparam T type of the key value
+ * @tparam gd global depth in Index
+ * @tparam fd max size in each Bucket's object
+ */
   template<typename T,int gd,int fd>
   class StaticHashing{
 
@@ -57,12 +70,23 @@ namespace bd2{
     }
 
 
+   /**
+     * @brief convert key value to hash repesctivily 
+     *
+     * @param key key's value of the register
+     */
     long getHash(value_key key){
       long hash=(long)key%gd;
       //transform key to hash
       return hash;
     }
 
+    /**
+     * @brief insert a new register in the bucket respectivily, search for an specific bucket a insert in it
+     *
+     * @param address_register the adddress of register saved priorly 
+     * @param key value of key registered 
+     */
     void insert(long address_register,value_key key){
 
 
@@ -94,6 +118,11 @@ namespace bd2{
         control_bucket->write_record(address_bucket,bucket);
       }
     }
+     /**
+     * @brief generate a next value for an specific sort of value in key, return this next value
+     *
+     * @param value value of key 
+     */
     value_key next_value(value_key value){
       value_key t;
       t=value+1;
@@ -101,6 +130,11 @@ namespace bd2{
       return t;
     }
 
+     /**
+     * @brief search in that specific bucket is an specific register and return the register's address
+     *
+     * @param key value of key 
+     */
     long search(value_key key){
       long hash=getHash(key);
       long address_bucket=hash;
@@ -121,6 +155,12 @@ namespace bd2{
       std::cout<<"Disk access ::"<<disk_accesses<<std::endl;
       return -1;
     }
+     /**
+     * @brief search for a set of values what register exists and return the registers' address
+     *
+     * @param begin lower bound of searched keys
+     * @param end upper bound of searched keys
+     */
     std::vector<long> search_by_range(value_key begin, value_key end){
       std::vector<long> result;
       for(value_key i=begin;;i=next_value(i)){
@@ -140,6 +180,11 @@ namespace bd2{
       return result;
     }
 
+    /**
+     * @brief search for a set of values what register exists and return the registers' address
+     *
+     * @param value value of key 
+     */
     void print(){
       long address_bucket;
       for(long i=0;i<(long)gd;i++){
