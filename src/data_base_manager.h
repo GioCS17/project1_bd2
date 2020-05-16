@@ -49,6 +49,12 @@ namespace bd2 {
                 indexSH = staticHashing (bucketManager, recordManager);
             }
             n_records = _n_records;
+            updatesize ();
+        }
+
+        void updatesize (){
+            std::cout << "Size: " << recordManager->get_size()/sizeof(Record) << std::endl;
+            n_records = recordManager->get_size()/sizeof(Record);
         }
 
         void insertWithoutIndex(Record &record) {
@@ -62,7 +68,7 @@ namespace bd2 {
                 recordManager->retrieve_record(i, record);
                 disk_access++;
                 if (record.id == key_value){
-                    std::cout << "Disk access: " << disk_access << std::endl;
+                    //std::cout << "Disk access: " << disk_access << std::endl;
                     break;
                 }
             }
@@ -73,7 +79,7 @@ namespace bd2 {
             fileIn.open(filename, std::ios::in | std::ios::binary);
             Record r;
             while (fileIn.read((char *) &r, sizeof(r))) {
-                //r.show();
+                r.show();
                 if (kind_of_index == 0)
                     insertWithBPlusTreeIndex(r, r.id, false);
                 else if (kind_of_index == 1) {
@@ -89,9 +95,11 @@ namespace bd2 {
         bool insertWithBPlusTreeIndex(Record &record, Key &key_value, bool checkIsTheKeyExist) {
             if (checkIsTheKeyExist) {
                 if (!index.isKeyPresent(key_value)) {
+                    std::cout << key_value << " - " << n_records << std::endl;
                     index.insert(key_value, n_records);
                     recordManager->write_record(n_records, record);
                     n_records++;
+                    std::cout << key_value << " - " << n_records << std::endl;
                     return true;
                 }
                 return false;
@@ -108,7 +116,7 @@ namespace bd2 {
             long record_pos = index.getRecordIdByKeyValue(key_value, disk_access);
             if (record_pos != -1) {
                 recordManager->retrieve_record(record_pos, record);
-                std::cout << "Disk access: " << disk_access << std::endl;
+                //std::cout << "Disk access: " << disk_access << std::endl;
                 return true;
             }
             return false;

@@ -103,5 +103,15 @@ class DiskManager : protected std::fstream{
        * @return false the file has elements
        */
       inline bool is_empty(){ return empty;}
+
+      /**
+       * @brief Function to get bytes of file
+       *
+       */
+      int get_size(){
+        clear ();
+        seekg (0, std::ios::end);
+        return tellg ();
+      }
     };
 }

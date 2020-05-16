@@ -15,8 +15,25 @@ struct Default
         int id;
         char description [249];
         char city [30];
-        char state [2];
+        char state [4];
         char weather [35];
+
+        void assign(int ids, std::string d, std::string c, std::string s, std::string w){
+              id = ids;
+              for (int i = 0; i < 249; i++){
+                description[i] = d[i];
+              }
+              for (int i = 0; i < 30; i++){
+                city[i] = c[i];
+              }
+              for (int i = 0; i < 2; i++){
+                state[i] = s[i];
+              }
+              for (int i = 0; i < 34; i++){
+                weather[i] = w[i];
+              }
+            }
+
 
         void show(){
             std:: cout << "id: " << id << std::endl;

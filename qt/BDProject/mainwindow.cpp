@@ -75,20 +75,22 @@ void MainWindow::on_pushButton_clicked()
                     QString res = query.mid(pos , query.size() - pos);
                     res.remove(QChar('('),Qt::CaseSensitive);
                     res.remove(QChar(')'),Qt::CaseSensitive);
-                    res.remove(QChar(' '),Qt::CaseSensitive);
                     QStringList entry = res.split(",");
                     if (entry.size()!=5)
                         ui->donebutton->setText("Entradas no validas");
                     else{
                         Default new_elem;
-                        new_elem.id = atoi(entry.at(0).toUtf8().constData());
-                        strcpy(new_elem.description, entry.at(1).toUtf8().constData());
-                        strcpy(new_elem.city, entry.at(2).toUtf8().constData());
-                        strcpy(new_elem.state, entry.at(3).toUtf8().constData());
-                        strcpy(new_elem.weather, entry.at(4).toUtf8().constData());
-                        new_elem.show();
-                        dbconsult.insertWithBPlusTreeIndex(new_elem, new_elem.id, true);
-                        ui->donebutton->setText("Insertado nuevo elemento");
+                        QString toint = entry.at(0);
+                        toint.remove(QChar(' '),Qt::CaseSensitive);
+                        new_elem.assign(atoi (toint.toUtf8().constData()),
+                                        entry.at(1).toUtf8().constData(),
+                                        entry.at(2).toUtf8().constData(),
+                                        entry.at(3).toUtf8().constData(),
+                                        entry.at(4).toUtf8().constData());
+                        if (dbconsult.insertWithBPlusTreeIndex(new_elem, new_elem.id, true))
+                            ui->donebutton->setText("Insertado nuevo elemento");
+                        else
+                            ui->donebutton->setText("El elemento ya existe");
                     }
                 }
             } else {
@@ -104,6 +106,7 @@ void MainWindow::on_pushButton_clicked()
 
             QFileInfo check_file(namedb + ".dat");
             if (check_file.exists() && check_file.isFile()){
+                ui->tablename->setText("Table: " + namedb);
                 if (parts.size() == 1){
                     ui->tableWidget->setRowCount(0);
                     std::shared_ptr<bd2::DiskManager> data = std::make_shared<bd2::DiskManager>((namedb + ".dat").toUtf8().constData(), false);
