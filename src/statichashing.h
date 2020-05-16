@@ -83,7 +83,7 @@ namespace bd2{
         new_bucket.address[0]=address_register;
         new_bucket.keys[0]=key;
         new_bucket.size=1;
-        long pos=control_bucket->write_record_toending(new_bucket);
+        long pos= control_bucket->write_record_to_ending(new_bucket);
         bucket.NextBucket=pos;
         control_bucket->write_record(address_bucket,bucket);
       }

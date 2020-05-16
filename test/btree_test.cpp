@@ -126,18 +126,6 @@ TEST_F(DiskBasedBtree, IteratorFromRandomPositionBack) {
     EXPECT_EQ(all_values, iter_values);
 }
 
-/*
-TEST_F(DiskBasedBtree, InsertCharIndex) {
-    std::shared_ptr<bd2::DiskManager> pm = std::make_shared<bd2::DiskManager>("btree_char.index");
-    using char_btree = bd2::BPlusTree<std::string, BTREE_ORDER>;
-    char_btree bt(pm);
-    std::string key = "alabama";
-    bt.insert(key);
-    bt.showTree();
-}
-*/
-
-
 TEST_F(DiskBasedBtree, DatabaseInsert){
     struct Student {
         long  id;

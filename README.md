@@ -1,52 +1,14 @@
-# project1_bd2
+# Project 1: Data Base II
 
-Requirements
--------------
-The basic requirements for this example is a anaconda enviroment:
+**Authors:**
+- Roosevelt Ubaldo Chavez
+- Juan Vargas Castillo
+- Giordano Alvitez Falcón
 
+***
 
-## Installation on LINUX/UNIX Systems
-
-Download miniconda from
-
-https://docs.conda.io/en/latest/miniconda.html
-
-```
-chmod +x Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-source activate base
-```
-
-## Installation the following packages
-
-```
-conda install -c anaconda cmake
-conda install -c conda-forge gtest
-conda install -c conda-forge gmock
-conda install -c hi2p-perim fmt
-```
-
-Note for osx:
-` brew install fmt`
-
-
-Build process
--------------
-```
-./build.sh
-```
-
-run gtest:
-```
-./btree-gtest
-```
-
-or 
-
-```
-cd /my_project_path/
-mkdir build
-cd build
-cmake ..
-make all
-```
+## Index
+- [Source Code of the implementation](/src)
+- [Testing using Gtest of the implementation](/test)
+- [Qt Graphic User Interface](/qt)
+- [Report](/doc)

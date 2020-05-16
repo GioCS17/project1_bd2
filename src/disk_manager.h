@@ -69,7 +69,7 @@ class DiskManager : protected std::fstream{
        * @param reg 
        */
       template<typename Record>
-      long write_record_toending(Record &reg){
+      long write_record_to_ending(Record &reg){
         clear(); //reset flags bit (goodbit, eofbit, failbit, badbit)
         seekp(0,std::ios::end);
         long pos=tellp();

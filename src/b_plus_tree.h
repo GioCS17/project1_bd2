@@ -398,6 +398,13 @@ public:
     ~BPlusTree(){
     }
 
+    /**
+     * @brief This function check is the value exist or not in the index
+     * 
+     * @param val value to be inserted
+     * @return true the value already exist
+     * @return false the value doesn't exist
+     */
     bool isKeyPresent(const T &val){
         node root = readNode(header.disk_id);
         int key_pos = -1;
@@ -408,6 +415,13 @@ public:
             return true;
     }
 
+    /**
+     * @brief Get the Record Id By Key Value object
+     * 
+     * @param val value to be finded
+     * @param disk_access variable to measure the quantity of disk access
+     * @return long id of the record finded by key value, if not exist return -1
+     */
     long getRecordIdByKeyValue(const T &val, int &disk_access){
         node root = readNode(header.disk_id);
         disk_access++;
@@ -421,11 +435,27 @@ public:
         return key_disk_id; //return -1
     }
 
+    /**
+     * @brief Find a key by it value
+     * 
+     * @param val key to be finded
+     * @param record_id position of the record on disk
+     * @param key_pos position in the keys array
+     */
     void find(const T &val, long &record_id ,int &key_pos){
         node root = readNode(header.disk_id);
         record_id = findKey(root, val, key_pos);
     }
 
+    /**
+     * @brief Function to find a in a node a key value, if not present it checks
+     * in his children until reach the leaf nodes
+     * @param ptr node in which search the key value
+     * @param val key value to be finded
+     * @param key_pos position of the key in the keys array
+     * @param disk_access quantity of disk accesses
+     * @return long position of the record on disk
+     */
     long findKey (node &ptr, const T &val, int &key_pos, int &disk_access){
         int pos = 0;
         while (pos < ptr.n_keys && ptr.keys[pos] < val)
@@ -447,6 +477,15 @@ public:
 
     }
 
+
+    /**
+     * @brief Function to search a value in a given node
+     * 
+     * @param ptr node in which we are going to find the key
+     * @param val value to be finded
+     * @param key_pos position in the keys array of the key finded
+     * @return long position on disk
+     */
     long findKey (node &ptr, const T &val, int &key_pos){
         int pos = 0;
         while (pos < ptr.n_keys && ptr.keys[pos] < val)
